@@ -10,5 +10,6 @@ import lombok.*;
 public class CategoryDto
 {
     private ContaminentDto contaminent;
+    private double contaminentValue;
     private AQICategoryDto aqiCategory;
 }

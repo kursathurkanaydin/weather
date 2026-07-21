@@ -57,6 +57,7 @@ public class AirPollutionService implements IAirPollutionService
                                 .contaminent(Contaminent.valueOf(category.getContaminent().getContaminent().toUpperCase()))
                                 .aqiCategory(AQICategory.valueOf(category.getAqiCategory().getAqiCategory().toUpperCase()))
                                 .airPollution(airPollution)
+                                .contaminentValue(category.getContaminentValue())
                                 .build()
                 )
                 .toList();

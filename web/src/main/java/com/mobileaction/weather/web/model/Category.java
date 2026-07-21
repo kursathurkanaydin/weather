@@ -21,6 +21,9 @@ public class Category
     @Column(name = "contaminent")
     private Contaminent contaminent;
 
+    @Column(name = "contaminent_value")
+    private Double contaminentValue;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "agi_category")
     private AQICategory aqiCategory;
