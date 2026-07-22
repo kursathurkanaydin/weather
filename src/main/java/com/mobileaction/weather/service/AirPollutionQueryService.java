@@ -1,7 +1,7 @@
 package com.mobileaction.weather.service;
 
 import com.mobileaction.weather.constant.ErrorMessages;
-import com.mobileaction.weather.dto.AirPollutionQueryDto;
+import com.mobileaction.weather.dto.request.AirPollutionQueryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionQueryNotFoundException;
 import com.mobileaction.weather.model.AirPollutionQuery;
 import com.mobileaction.weather.model.AirPollutionQueryStatus;
@@ -39,12 +39,12 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
     @Override
-    public AirPollutionQuery create(AirPollutionQueryDto airPollutionQueryDto)
+    public AirPollutionQuery create(AirPollutionQueryCreateRequest airPollutionQueryCreateRequest)
     {
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
-                .city(airPollutionQueryDto.getCity())
-                .startDate(airPollutionQueryDto.getStartDate())
-                .endDate(airPollutionQueryDto.getEndDate())
+                .city(airPollutionQueryCreateRequest.getCity())
+                .startDate(airPollutionQueryCreateRequest.getStartDate())
+                .endDate(airPollutionQueryCreateRequest.getEndDate())
                 .status(AirPollutionQueryStatus.PENDING)
                 .build();
 

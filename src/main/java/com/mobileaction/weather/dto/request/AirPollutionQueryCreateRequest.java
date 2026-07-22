@@ -1,4 +1,4 @@
-package com.mobileaction.weather.dto;
+package com.mobileaction.weather.dto.request;
 
 import lombok.*;
 
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AirPollutionQueryDto
+public class AirPollutionQueryCreateRequest
 {
     private String city;
     private LocalDate startDate;

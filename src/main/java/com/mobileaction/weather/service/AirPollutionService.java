@@ -1,9 +1,8 @@
 package com.mobileaction.weather.service;
 
 import com.mobileaction.weather.constant.ErrorMessages;
-import com.mobileaction.weather.dto.AirPollutionDto;
+import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
-import com.mobileaction.weather.model.AQICategory;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
@@ -41,23 +40,25 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
-    public AirPollution create(AirPollutionDto airPollutionDto)
+    public AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest)
     {
         AirPollution airPollution = AirPollution.builder()
-                .city(airPollutionDto.getCity())
-                .date(airPollutionDto.getDate())
+                .city(airPollutionCreateRequest.getCity())
+                .date(airPollutionCreateRequest.getDate())
                 .build();
 
 
-        List<Category> categoryList = airPollutionDto.getCategories().stream()
+        List<Category> categoryList = airPollutionCreateRequest.getCategories().stream()
                 .map(category ->
-                        Category.builder()
-                                .contaminent(Contaminent.valueOf(category.getContaminent().getContaminent().toUpperCase()))
-                                .aqiCategory(AQICategory.valueOf(category.getAqiCategory().getAqiCategory().toUpperCase()))
-                                .airPollution(airPollution)
-                                .contaminentValue(category.getContaminentValue())
-                                .build()
-                )
+                {
+                    Contaminent contaminent = Contaminent.valueOf(category.getContaminent().toUpperCase());
+                    return Category.builder()
+                            .contaminent(contaminent)
+                            .aqiCategory(contaminent.resolveAqiCategory(category.getContaminentValue()))
+                            .airPollution(airPollution)
+                            .contaminentValue(category.getContaminentValue())
+                            .build();
+                })
                 .toList();
 
 
