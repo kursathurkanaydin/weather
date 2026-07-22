@@ -1,8 +1,10 @@
 package com.mobileaction.weather.web.service;
 
+import com.mobileaction.weather.common.dto.AirPollutionQueryDto;
 import com.mobileaction.weather.web.constant.ErrorMessages;
 import com.mobileaction.weather.web.exception.AirPollutionQueryNotFoundException;
 import com.mobileaction.weather.web.model.AirPollutionQuery;
+import com.mobileaction.weather.web.model.AirPollutionQueryStatus;
 import com.mobileaction.weather.web.repository.IAirPollutionQueryRepository;
 import org.springframework.stereotype.Service;
 
@@ -37,12 +39,13 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
     @Override
-    public AirPollutionQuery create(AirPollutionQuery airPollutionQuery)
+    public AirPollutionQuery create(AirPollutionQueryDto airPollutionQueryDto)
     {
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
-                .city(airPollutionQuery.getCity())
-                .startDate(airPollutionQuery.getStartDate())
-                .endDate(airPollutionQuery.getEndDate())
+                .city(airPollutionQueryDto.getCity())
+                .startDate(airPollutionQueryDto.getStartDate())
+                .endDate(airPollutionQueryDto.getEndDate())
+                .status(AirPollutionQueryStatus.PENDING)
                 .build();
 
         save(newAirPollutionQuery);
