@@ -10,6 +10,7 @@ import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.AirPollutionQueryCreateRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionQueryNotFoundException;
+import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.model.AirPollutionQuery;
 import com.mobileaction.weather.model.AirPollutionQueryStatus;
 import com.mobileaction.weather.model.Contaminent;
@@ -63,6 +64,11 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     @Override
     public AirPollutionQuery create(AirPollutionQueryCreateRequest airPollutionQueryCreateRequest)
     {
+        if (airPollutionQueryCreateRequest.getCity() == null || airPollutionQueryCreateRequest.getCity().isBlank())
+        {
+            throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
+        }
+
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
                 .city(airPollutionQueryCreateRequest.getCity())
                 .startDate(airPollutionQueryCreateRequest.getStartDate())
