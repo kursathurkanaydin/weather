@@ -7,6 +7,7 @@ import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -72,5 +73,11 @@ public class AirPollutionService implements IAirPollutionService
     public List<AirPollution> findAll()
     {
         return airPollutionRepository.findAll();
+    }
+
+    @Override
+    public List<AirPollution> findAllWithPage(Pageable pageable)
+    {
+        return airPollutionRepository.findAll(pageable).getContent();
     }
 }

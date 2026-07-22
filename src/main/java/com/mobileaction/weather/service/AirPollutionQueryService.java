@@ -16,6 +16,8 @@ import com.mobileaction.weather.model.AirPollutionQueryStatus;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionQueryRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -87,6 +89,12 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     public List<AirPollutionQuery> findAll()
     {
         return airPollutionQueryRepository.findAll();
+    }
+
+    @Override
+    public List<AirPollutionQuery> findAllWithPage(Pageable pageable)
+    {
+        return airPollutionQueryRepository.findAll(pageable).getContent();
     }
 
     private void process(AirPollutionQuery airPollutionQuery)
