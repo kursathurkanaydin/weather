@@ -2,6 +2,7 @@ package com.mobileaction.weather.service;
 
 import com.mobileaction.weather.client.ICrawlerClient;
 import com.mobileaction.weather.constant.ErrorMessages;
+import com.mobileaction.weather.constant.LogMessages;
 import com.mobileaction.weather.dto.AirPollutionComponentsDto;
 import com.mobileaction.weather.dto.AirPollutionHistoryDto;
 import com.mobileaction.weather.dto.AirPollutionHistoryEntryDto;
@@ -98,10 +99,10 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
             );
             if (airPollutionQuery.isPresent())
             {
-                log.info(String.format("Query with city:%s, startDate:%s and endDate:%s already executed",
+                log.info(LogMessages.AIR_POLLUTION_QUERY_ALREADY_EXECUTED,
                         airPollutionQueryCreateRequest.getCity(),
                         airPollutionQueryCreateRequest.getStartDate(),
-                        airPollutionQueryCreateRequest.getEndDate()));
+                        airPollutionQueryCreateRequest.getEndDate());
                 return airPollutionQuery.get();
             }
             throw new AirPollutionQueryNotFoundException(
@@ -157,7 +158,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         }
         catch (Exception ex)
         {
-            log.error("Couldn't process air pollution query for city: {}", airPollutionQuery.getCity(), ex);
+            log.error(LogMessages.AIR_POLLUTION_QUERY_PROCESSING_FAILED, airPollutionQuery.getCity(), ex);
             airPollutionQuery.setStatus(AirPollutionQueryStatus.FAILED);
         }
         finally

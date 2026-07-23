@@ -1,5 +1,6 @@
 package com.mobileaction.weather.client;
 
+import com.mobileaction.weather.constant.LogMessages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,16 +38,16 @@ public class HttpRequestExecutor implements IHttpRequestExecutor
         {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND)
             {
-                log.info("Requested resource was not found url: {}", url);
+                log.info(LogMessages.HTTP_RESOURCE_NOT_FOUND, url);
             }
 
-            log.warn("Couldn't get successful result from http request status:{} url: {}", ex.getStatusCode(), url);
+            log.warn(LogMessages.HTTP_REQUEST_UNSUCCESSFUL, ex.getStatusCode(), url);
 
             throw new RestClientException("Couldn't get successful result from http request", ex);
         }
         catch (Exception ex)
         {
-            log.error("Unknown error occurred while executing http request for url: {}", url, ex);
+            log.error(LogMessages.HTTP_REQUEST_UNKNOWN_ERROR, url, ex);
 
             throw new IllegalStateException("Unknown error occurred while executing http request", ex);
         }
