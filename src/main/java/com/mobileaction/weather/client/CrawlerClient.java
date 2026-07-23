@@ -1,5 +1,6 @@
 package com.mobileaction.weather.client;
 
+import com.mobileaction.weather.constant.ErrorMessages;
 import com.mobileaction.weather.dto.AirPollutionHistoryDto;
 import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.exception.CityNotFoundException;
@@ -32,7 +33,7 @@ public class CrawlerClient implements ICrawlerClient
 
         if (geocodes == null || geocodes.length == 0)
         {
-            throw new CityNotFoundException(String.format("Couldn't find geocode for given city: %s", cityName));
+            throw new CityNotFoundException(String.format(ErrorMessages.GECODE_NOT_FOUND_WITH_GIVEN_CITY, cityName));
         }
 
         return geocodes[0];

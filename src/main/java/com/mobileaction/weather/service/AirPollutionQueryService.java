@@ -71,6 +71,28 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
             throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
         }
 
+        if (airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
+                airPollutionQueryCreateRequest.getCity(),
+                airPollutionQueryCreateRequest.getStartDate(),
+                airPollutionQueryCreateRequest.getEndDate()))
+        {
+            Optional<AirPollutionQuery> airPollutionQuery = airPollutionQueryRepository.findByCityAndStartDateAndEndDate(
+                    airPollutionQueryCreateRequest.getCity(),
+                    airPollutionQueryCreateRequest.getStartDate(),
+                    airPollutionQueryCreateRequest.getEndDate()
+            );
+            if (airPollutionQuery.isPresent()) {
+                return airPollutionQuery.get();
+            }
+            throw new AirPollutionQueryNotFoundException(
+                    String.format(
+                            ErrorMessages.AIR_POLLUTION_QUERY_NOT_FOUNT_WITH_CITY_START_DATE_AND_END_DATE,
+                            airPollutionQueryCreateRequest.getCity(),
+                            airPollutionQueryCreateRequest.getStartDate(),
+                            airPollutionQueryCreateRequest.getEndDate())
+            );
+        }
+
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
                 .city(airPollutionQueryCreateRequest.getCity())
                 .startDate(airPollutionQueryCreateRequest.getStartDate())
