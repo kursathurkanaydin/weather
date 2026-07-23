@@ -10,12 +10,16 @@ import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.AirPollutionQueryCreateRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionQueryNotFoundException;
+import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.model.AirPollutionQuery;
 import com.mobileaction.weather.model.AirPollutionQueryStatus;
+import com.mobileaction.weather.model.City;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionQueryRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,10 +27,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,14 +37,18 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     private final IAirPollutionQueryRepository airPollutionQueryRepository;
     private final ICrawlerClient crawlerClient;
     private final IAirPollutionService airPollutionService;
+    private final Set<String> supportedCities;
 
     public AirPollutionQueryService(IAirPollutionQueryRepository airPollutionQueryRepository,
                                     ICrawlerClient crawlerClient,
-                                    IAirPollutionService airPollutionService)
+                                    IAirPollutionService airPollutionService,
+                                    @Qualifier("supportedCities") Set<String> supportedCities
+    )
     {
         this.airPollutionQueryRepository = airPollutionQueryRepository;
         this.crawlerClient = crawlerClient;
         this.airPollutionService = airPollutionService;
+        this.supportedCities = supportedCities;
     }
 
     @Override
@@ -70,6 +75,15 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         if (airPollutionQueryCreateRequest.getCity() == null || airPollutionQueryCreateRequest.getCity().isBlank())
         {
             throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
+        }
+
+        String cityName = airPollutionQueryCreateRequest.getCity().toUpperCase();
+
+        if (!supportedCities.contains(cityName))
+        {
+            throw new CityNotSupportedException(String.format(
+                    ErrorMessages.CITY_NOT_SUPPORTED_WITH_GIVEN_NAME,
+                    cityName));
         }
 
         if (airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(

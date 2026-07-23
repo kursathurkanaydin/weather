@@ -8,4 +8,5 @@ public class ErrorMessages
     public static final String AIR_POLLUTION_QUERY_NOT_FOUNT_WITH_CITY_START_DATE_AND_END_DATE =
             "AirPollution Query not found with given city: %s, startDate: %s and endDate: %s";
     public static final String GECODE_NOT_FOUND_WITH_GIVEN_CITY="Couldn't find geocode for given city: %s";
+    public static final String CITY_NOT_SUPPORTED_WITH_GIVEN_NAME="City not supported with given name: %s";
 }
