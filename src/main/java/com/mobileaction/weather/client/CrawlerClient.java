@@ -57,7 +57,7 @@ public class CrawlerClient implements ICrawlerClient
         }
         catch (Exception exception)
         {
-            log.error("Error occur with lat:{}, long:{}, start:{}, end:{}", lat, lon, startDate, endDate);
+            log.error(LogMessages.AIR_POLLUTION_HISTORY_FETCH_FAILED, lat, lon, startDate, endDate);
             throw new RuntimeException(exception.getMessage());
         }
 
