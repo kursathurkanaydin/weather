@@ -47,10 +47,19 @@ public class CrawlerClient implements ICrawlerClient
     @Override
     public AirPollutionHistoryDto fetchAirPollutionHistory(double lat, double lon, LocalDate startDate, LocalDate endDate)
     {
-        long start = startDate.atStartOfDay(ZoneOffset.UTC).plusHours(12).toEpochSecond();
-        long end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+        try
+        {
+            long start = startDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+            long end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
 
-        String url = String.format(API_AIR_POLLUTION_HISTORY_URL, lat, lon, start, end, openWeatherApiKey);
-        return httpRequestExecutor.executeGetRequest(url, AirPollutionHistoryDto.class);
+            String url = String.format(API_AIR_POLLUTION_HISTORY_URL, lat, lon, start, end, openWeatherApiKey);
+            return httpRequestExecutor.executeGetRequest(url, AirPollutionHistoryDto.class);
+        }
+        catch (Exception exception)
+        {
+            log.error("Error occur with lat:{}, long:{}, start:{}, end:{}", lat, lon, startDate, endDate);
+            throw new RuntimeException(exception.getMessage());
+        }
+
     }
 }

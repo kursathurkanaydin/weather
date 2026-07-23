@@ -4,6 +4,7 @@ import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.model.AirPollution;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IAirPollutionService
@@ -17,4 +18,6 @@ public interface IAirPollutionService
     AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest);
 
     AirPollution findById(long id);
+
+    boolean isExistsByDateAndCity(String city, LocalDate date);
 }

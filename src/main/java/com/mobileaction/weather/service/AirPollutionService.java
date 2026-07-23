@@ -10,6 +10,7 @@ import com.mobileaction.weather.repository.IAirPollutionRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,5 +80,11 @@ public class AirPollutionService implements IAirPollutionService
     public List<AirPollution> findAllWithPage(Pageable pageable)
     {
         return airPollutionRepository.findAll(pageable).getContent();
+    }
+
+    @Override
+    public boolean isExistsByDateAndCity(String city, LocalDate date)
+    {
+        return airPollutionRepository.existsByCityAndDate(city, date);
     }
 }

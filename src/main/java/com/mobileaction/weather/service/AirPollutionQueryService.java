@@ -112,10 +112,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                     cityName));
         }
 
-        if (airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
-                request.getCity(),
-                request.getStartDate(),
-                request.getEndDate()))
+        if (isQueryExists(request))
         {
             Optional<AirPollutionQuery> airPollutionQuery = airPollutionQueryRepository.findByCityAndStartDateAndEndDate(
                     request.getCity(),
@@ -195,11 +192,22 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     {
         AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
         airPollutionHistoryDto.setList(new ArrayList<>());
+        String city = query.getCity();
         for (LocalDate currentDate = query.getStartDate(); !currentDate.isAfter(query.getEndDate()); currentDate = currentDate.plusDays(1))
         {
-            AirPollutionHistoryEntryDto entryDto = crawlerClient.fetchAirPollutionHistory(
-                    geocode.getLat(), geocode.getLon(), currentDate, currentDate).getList().get(0);
-            airPollutionHistoryDto.getList().add(entryDto);
+            if (airPollutionService.isExistsByDateAndCity(city, currentDate))
+            {
+                log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
+                continue;
+            }
+            List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
+                    geocode.getLat(), geocode.getLon(), currentDate, currentDate).getList();
+            if (entries == null || entries.isEmpty())
+            {
+                log.warn(LogMessages.AIR_POLLUTION_HISTORY_NOT_AVAILABLE, city, currentDate);
+                continue;
+            }
+            airPollutionHistoryDto.getList().add(entries.get(0));
         }
 
         return airPollutionHistoryDto;
@@ -251,5 +259,21 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                 .date(date)
                 .categories(categories)
                 .build();
+    }
+
+    private boolean isQueryExists(String city, LocalDate startDate, LocalDate endDate)
+    {
+       return airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
+                city,
+                startDate,
+                endDate);
+    }
+
+    private boolean isQueryExists(AirPollutionQueryCreateRequest  request)
+    {
+        return airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
+                request.getCity(),
+                request.getStartDate(),
+                request.getEndDate());
     }
 }
