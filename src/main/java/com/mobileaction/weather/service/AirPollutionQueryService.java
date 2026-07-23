@@ -80,9 +80,6 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         LocalDate today = LocalDate.now();
         if (request.getStartDate() == null && request.getEndDate() == null)
         {
-            DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-
             request.setStartDate(today.minusWeeks(1));
             request.setEndDate(today);
         }
