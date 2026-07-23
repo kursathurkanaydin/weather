@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 @Service
 public class AirPollutionQueryService implements IAirPollutionQueryService
 {
+    // OpenWeatherMap's air pollution history endpoint only has data from this date onward.
+    private static final LocalDate EARLIEST_SUPPORTED_DATE = LocalDate.of(2020, 11, 27);
+
     private final IAirPollutionQueryRepository airPollutionQueryRepository;
     private final ICrawlerClient crawlerClient;
     private final IAirPollutionService airPollutionService;
@@ -146,6 +149,14 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                     ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
                     request.getStartDate(),
                     request.getEndDate()));
+        }
+
+        if (request.getStartDate().isBefore(EARLIEST_SUPPORTED_DATE))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_TOO_EARLY,
+                    request.getStartDate(),
+                    EARLIEST_SUPPORTED_DATE));
         }
     }
 

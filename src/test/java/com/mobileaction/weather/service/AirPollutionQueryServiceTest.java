@@ -141,6 +141,38 @@ class AirPollutionQueryServiceTest
     }
 
     @Test
+    void create_startDateBeforeApiSupportedRange_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(LocalDate.of(2020, 11, 26))
+                .endDate(LocalDate.of(2020, 12, 1))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionQueryService.create(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class)
+                .hasMessageContaining("2020-11-26")
+                .hasMessageContaining("2020-11-27");
+
+        verifyNoInteractions(airPollutionQueryRepository, crawlerClient, airPollutionService);
+    }
+
+    @Test
+    void create_startDateExactlyOnEarliestSupportedDate_doesNotThrow()
+    {
+        LocalDate earliestSupportedDate = LocalDate.of(2020, 11, 27);
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(earliestSupportedDate)
+                .endDate(earliestSupportedDate)
+                .build();
+
+        AirPollutionQuery result = airPollutionQueryService.create(request);
+
+        assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.COMPLETED);
+    }
+
+    @Test
     void create_onlyStartDateNull_defaultsToOneWeekBeforeEndDate()
     {
         LocalDate endDate = LocalDate.of(2026, 6, 20);
