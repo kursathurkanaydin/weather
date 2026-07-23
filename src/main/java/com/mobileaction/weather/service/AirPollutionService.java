@@ -42,6 +42,13 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
+    public void delete(long id)
+    {
+        findById(id);
+        airPollutionRepository.deleteById(id);
+    }
+
+    @Override
     public AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest)
     {
         AirPollution airPollution = AirPollution.builder()

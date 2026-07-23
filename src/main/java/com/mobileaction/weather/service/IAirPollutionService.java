@@ -19,5 +19,7 @@ public interface IAirPollutionService
 
     AirPollution findById(long id);
 
+    void delete(long id);
+
     boolean isExistsByDateAndCity(String city, LocalDate date);
 }

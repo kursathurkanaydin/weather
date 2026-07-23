@@ -46,4 +46,12 @@ public class AirPollutionController
         AirPollution newAirPollution = airPollutionService.create(airPollutionCreateRequest);
         return ResponseEntity.ok(AirPollutionMapper.toResponse(newAirPollution));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAirPollution(@PathVariable Long id)
+    {
+        airPollutionService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

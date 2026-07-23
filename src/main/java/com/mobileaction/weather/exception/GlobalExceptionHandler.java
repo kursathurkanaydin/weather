@@ -20,7 +20,7 @@ public class GlobalExceptionHandler
             AirPollutionNotFoundException ex,
             HttpServletRequest request)
     {
-        return buildResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND, null);
+        return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
     @ExceptionHandler(AirPollutionQueryNotFoundException.class)
