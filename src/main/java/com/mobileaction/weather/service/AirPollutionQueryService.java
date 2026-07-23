@@ -15,13 +15,10 @@ import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.model.AirPollutionQuery;
 import com.mobileaction.weather.model.AirPollutionQueryStatus;
-import com.mobileaction.weather.model.City;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionQueryRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -174,10 +171,9 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         {
             GeocodeDto geocode = crawlerClient.fetchGeocode(airPollutionQuery.getCity());
 
-            AirPollutionHistoryDto history = crawlerClient.fetchAirPollutionHistory(
-                    geocode.getLat(), geocode.getLon(), airPollutionQuery.getStartDate(), airPollutionQuery.getEndDate());
+            AirPollutionHistoryDto history = getHistory(geocode, airPollutionQuery);
 
-            Map<LocalDate, AirPollutionHistoryEntryDto> lastEntryByDate = groupLastEntryByDate(history);
+            Map<LocalDate, AirPollutionHistoryEntryDto> lastEntryByDate = groupEntriesByDate(history);
 
             lastEntryByDate.forEach((date, entry) ->
                     airPollutionService.create(toAirPollutionCreateRequest(airPollutionQuery.getCity(), date, entry)));
@@ -198,6 +194,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     private AirPollutionHistoryDto getHistory(GeocodeDto geocode, AirPollutionQuery query)
     {
         AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
+        airPollutionHistoryDto.setList(new ArrayList<>());
         for (LocalDate currentDate = query.getStartDate(); !currentDate.isAfter(query.getEndDate()); currentDate = currentDate.plusDays(1))
         {
             AirPollutionHistoryEntryDto entryDto = crawlerClient.fetchAirPollutionHistory(
@@ -209,7 +206,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
 
-    private Map<LocalDate, AirPollutionHistoryEntryDto> groupLastEntryByDate(AirPollutionHistoryDto history)
+    private Map<LocalDate, AirPollutionHistoryEntryDto> groupEntriesByDate(AirPollutionHistoryDto history)
     {
         if (history.getList() == null)
         {
@@ -220,7 +217,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                 .collect(Collectors.toMap(
                         entry -> toLocalDate(entry.getDt()),
                         entry -> entry,
-                        (firstEntryOfDay, lastEntryOfDay) -> lastEntryOfDay,
+                        (exists, newEntry) -> exists,
                         LinkedHashMap::new));
     }
 
