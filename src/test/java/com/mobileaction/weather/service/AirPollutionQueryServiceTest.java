@@ -4,6 +4,7 @@ import com.mobileaction.weather.client.ICrawlerClient;
 import com.mobileaction.weather.dto.AirPollutionHistoryDto;
 import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.dto.request.AirPollutionQueryCreateRequest;
+import com.mobileaction.weather.exception.CityNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.model.AirPollutionQuery;
@@ -260,6 +261,26 @@ class AirPollutionQueryServiceTest
 
         assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.COMPLETED);
         verify(crawlerClient).fetchAirPollutionHistory(1.0, 2.0, date, date);
+        verify(airPollutionService, never()).create(any());
+    }
+
+    @Test
+    void create_geocodeLookupThrows_marksQueryAsFailedAndSavesIt()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        when(crawlerClient.fetchGeocode("Ankara"))
+                .thenThrow(new CityNotFoundException("Couldn't find geocode for given city: Ankara"));
+
+        AirPollutionQuery result = airPollutionQueryService.create(request);
+
+        assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.FAILED);
+        verify(airPollutionQueryRepository, times(2)).save(any(AirPollutionQuery.class));
         verify(airPollutionService, never()).create(any());
     }
 }
