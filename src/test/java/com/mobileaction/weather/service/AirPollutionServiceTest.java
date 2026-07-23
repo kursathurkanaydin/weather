@@ -3,6 +3,7 @@ package com.mobileaction.weather.service;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
+import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AQICategory;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
@@ -138,6 +139,23 @@ class AirPollutionServiceTest
         assertThat(o3.getAqiCategory()).isEqualTo(AQICategory.HAZARDOUS);
 
         verify(airPollutionRepository).save(result);
+    }
+
+    @Test
+    void create_invalidContaminentName_throwsInvalidContaminentExceptionWithoutSaving()
+    {
+        AirPollutionCreateRequest request = AirPollutionCreateRequest.builder()
+                .city("Ankara")
+                .date(LocalDate.of(2026, 7, 1))
+                .categories(List.of(
+                        CategoryCreateRequest.builder().contaminent("XX").contaminentValue(1.0).build()))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionService.create(request))
+                .isInstanceOf(InvalidContaminentException.class)
+                .hasMessageContaining("XX");
+
+        verify(airPollutionRepository, never()).save(any(AirPollution.class));
     }
 
     @Test

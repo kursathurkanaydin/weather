@@ -56,6 +56,14 @@ public class GlobalExceptionHandler
         return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
+    @ExceptionHandler(InvalidContaminentException.class)
+    public ResponseEntity<ErrorDetails> handleInvalidContaminentException(
+            InvalidContaminentException ex,
+            HttpServletRequest request)
+    {
+        return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex,

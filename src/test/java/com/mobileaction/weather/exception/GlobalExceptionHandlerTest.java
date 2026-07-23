@@ -25,4 +25,18 @@ class GlobalExceptionHandlerTest
         assertThat(response.getBody().getMessage()).isEqualTo(ex.getMessage());
         assertThat(response.getBody().getPath()).isEqualTo("/api/air-pollution/404");
     }
+
+    @Test
+    void handleInvalidContaminentException_returnsBadRequest()
+    {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/air-pollution");
+        InvalidContaminentException ex = new InvalidContaminentException("Invalid contaminent name: XX");
+
+        ResponseEntity<ErrorDetails> response = handler.handleInvalidContaminentException(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getStatus()).isEqualTo(400);
+        assertThat(response.getBody().getMessage()).isEqualTo(ex.getMessage());
+    }
 }

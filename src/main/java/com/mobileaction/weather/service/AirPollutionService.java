@@ -3,6 +3,7 @@ package com.mobileaction.weather.service;
 import com.mobileaction.weather.constant.ErrorMessages;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
+import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
@@ -60,7 +61,7 @@ public class AirPollutionService implements IAirPollutionService
         List<Category> categoryList = airPollutionCreateRequest.getCategories().stream()
                 .map(category ->
                 {
-                    Contaminent contaminent = Contaminent.valueOf(category.getContaminent().toUpperCase());
+                    Contaminent contaminent = resolveContaminent(category.getContaminent());
                     return Category.builder()
                             .contaminent(contaminent)
                             .aqiCategory(contaminent.resolveAqiCategory(category.getContaminentValue()))
@@ -93,5 +94,18 @@ public class AirPollutionService implements IAirPollutionService
     public boolean isExistsByDateAndCity(String city, LocalDate date)
     {
         return airPollutionRepository.existsByCityAndDate(city, date);
+    }
+
+    private Contaminent resolveContaminent(String contaminentName)
+    {
+        try
+        {
+            return Contaminent.valueOf(contaminentName.toUpperCase());
+        }
+        catch (IllegalArgumentException ex)
+        {
+            throw new InvalidContaminentException(
+                    String.format(ErrorMessages.INVALID_CONTAMINENT_WITH_GIVEN_NAME, contaminentName));
+        }
     }
 }
