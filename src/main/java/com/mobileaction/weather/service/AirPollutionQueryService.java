@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -109,28 +108,18 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                     cityName));
         }
 
-        if (isQueryExists(request))
+        Optional<AirPollutionQuery> completedQuery = airPollutionQueryRepository.findByCityAndStartDateAndEndDateAndStatus(
+                request.getCity(),
+                request.getStartDate(),
+                request.getEndDate(),
+                AirPollutionQueryStatus.COMPLETED);
+        if (completedQuery.isPresent())
         {
-            Optional<AirPollutionQuery> airPollutionQuery = airPollutionQueryRepository.findByCityAndStartDateAndEndDate(
+            log.info(LogMessages.AIR_POLLUTION_QUERY_ALREADY_EXECUTED,
                     request.getCity(),
                     request.getStartDate(),
-                    request.getEndDate()
-            );
-            if (airPollutionQuery.isPresent())
-            {
-                log.info(LogMessages.AIR_POLLUTION_QUERY_ALREADY_EXECUTED,
-                        request.getCity(),
-                        request.getStartDate(),
-                        request.getEndDate());
-                return airPollutionQuery.get();
-            }
-            throw new AirPollutionQueryNotFoundException(
-                    String.format(
-                            ErrorMessages.AIR_POLLUTION_QUERY_NOT_FOUNT_WITH_CITY_START_DATE_AND_END_DATE,
-                            request.getCity(),
-                            request.getStartDate(),
-                            request.getEndDate())
-            );
+                    request.getEndDate());
+            return completedQuery.get();
         }
 
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
@@ -256,21 +245,5 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                 .date(date)
                 .categories(categories)
                 .build();
-    }
-
-    private boolean isQueryExists(String city, LocalDate startDate, LocalDate endDate)
-    {
-       return airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
-                city,
-                startDate,
-                endDate);
-    }
-
-    private boolean isQueryExists(AirPollutionQueryCreateRequest  request)
-    {
-        return airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
-                request.getCity(),
-                request.getStartDate(),
-                request.getEndDate());
     }
 }

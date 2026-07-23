@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -169,7 +170,7 @@ class AirPollutionQueryServiceTest
     }
 
     @Test
-    void create_queryAlreadyExists_returnsCachedQueryWithoutReprocessing()
+    void create_completedQueryExists_returnsCachedQueryWithoutReprocessing()
     {
         LocalDate startDate = LocalDate.of(2026, 7, 1);
         LocalDate endDate = LocalDate.of(2026, 7, 8);
@@ -187,9 +188,8 @@ class AirPollutionQueryServiceTest
                 .status(AirPollutionQueryStatus.COMPLETED)
                 .build();
 
-        when(airPollutionQueryRepository.existsByCityAndStartDateAndEndDate("Ankara", startDate, endDate))
-                .thenReturn(true);
-        when(airPollutionQueryRepository.findByCityAndStartDateAndEndDate("Ankara", startDate, endDate))
+        when(airPollutionQueryRepository.findByCityAndStartDateAndEndDateAndStatus(
+                "Ankara", startDate, endDate, AirPollutionQueryStatus.COMPLETED))
                 .thenReturn(Optional.of(existingQuery));
 
         AirPollutionQuery result = airPollutionQueryService.create(request);
@@ -197,6 +197,30 @@ class AirPollutionQueryServiceTest
         assertThat(result).isSameAs(existingQuery);
         verify(airPollutionQueryRepository, never()).save(any(AirPollutionQuery.class));
         verifyNoInteractions(crawlerClient, airPollutionService);
+    }
+
+    @Test
+    void create_noCompletedQueryExists_createsAndProcessesNewQueryEvenIfPriorAttemptFailed()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        LocalDate endDate = LocalDate.of(2026, 7, 8);
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(startDate)
+                .endDate(endDate)
+                .build();
+
+        // No stub for findByCityAndStartDateAndEndDateAndStatus(..., COMPLETED): Mockito
+        // returns Optional.empty() by default - the same thing that happens in production
+        // when the only matching row is a previous FAILED attempt (or none at all). The
+        // service must not treat that as "already done" and must start a fresh attempt.
+        AirPollutionQuery result = airPollutionQueryService.create(request);
+
+        assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.COMPLETED);
+        verify(airPollutionQueryRepository).findByCityAndStartDateAndEndDateAndStatus(
+                "Ankara", startDate, endDate, AirPollutionQueryStatus.COMPLETED);
+        verify(airPollutionQueryRepository, times(2)).save(any(AirPollutionQuery.class));
+        verify(crawlerClient).fetchGeocode("Ankara");
     }
 
     @Test
