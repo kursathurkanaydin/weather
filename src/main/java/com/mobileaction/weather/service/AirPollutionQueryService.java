@@ -38,8 +38,8 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     private final IAirPollutionService airPollutionService;
 
     public AirPollutionQueryService(IAirPollutionQueryRepository airPollutionQueryRepository,
-                                     ICrawlerClient crawlerClient,
-                                     IAirPollutionService airPollutionService)
+                                    ICrawlerClient crawlerClient,
+                                    IAirPollutionService airPollutionService)
     {
         this.airPollutionQueryRepository = airPollutionQueryRepository;
         this.crawlerClient = crawlerClient;
@@ -56,7 +56,8 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     public AirPollutionQuery findById(long id)
     {
         Optional<AirPollutionQuery> dbAirPollutionQuery = airPollutionQueryRepository.findById(id);
-        if (dbAirPollutionQuery.isPresent()) {
+        if (dbAirPollutionQuery.isPresent())
+        {
             return dbAirPollutionQuery.get();
         }
         throw new AirPollutionQueryNotFoundException(
@@ -81,7 +82,12 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
                     airPollutionQueryCreateRequest.getStartDate(),
                     airPollutionQueryCreateRequest.getEndDate()
             );
-            if (airPollutionQuery.isPresent()) {
+            if (airPollutionQuery.isPresent())
+            {
+                log.info(String.format("Query with city:%s, startDate:%s and endDate:%s already executed",
+                        airPollutionQueryCreateRequest.getCity(),
+                        airPollutionQueryCreateRequest.getStartDate(),
+                        airPollutionQueryCreateRequest.getEndDate()));
                 return airPollutionQuery.get();
             }
             throw new AirPollutionQueryNotFoundException(
