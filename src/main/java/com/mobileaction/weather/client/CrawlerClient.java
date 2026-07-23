@@ -36,6 +36,10 @@ public class CrawlerClient implements ICrawlerClient
             throw new CityNotFoundException(String.format(ErrorMessages.GECODE_NOT_FOUND_WITH_GIVEN_CITY, cityName));
         }
 
+        log.info(String.format("Coordinates of given city:%s -> lat:%f , lon:%f",
+                cityName,
+                geocodes[0].getLat(),
+                geocodes[0].getLon()));
         return geocodes[0];
     }
 
