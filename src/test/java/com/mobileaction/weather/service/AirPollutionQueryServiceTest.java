@@ -124,6 +124,23 @@ class AirPollutionQueryServiceTest
     }
 
     @Test
+    void create_startDateAfterEndDate_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(LocalDate.of(2026, 7, 10))
+                .endDate(LocalDate.of(2026, 7, 1))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionQueryService.create(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class)
+                .hasMessageContaining("2026-07-10")
+                .hasMessageContaining("2026-07-01");
+
+        verifyNoInteractions(airPollutionQueryRepository, crawlerClient, airPollutionService);
+    }
+
+    @Test
     void create_onlyStartDateNull_defaultsToOneWeekBeforeEndDate()
     {
         LocalDate endDate = LocalDate.of(2026, 6, 20);
@@ -211,10 +228,6 @@ class AirPollutionQueryServiceTest
                 .endDate(endDate)
                 .build();
 
-        // No stub for findByCityAndStartDateAndEndDateAndStatus(..., COMPLETED): Mockito
-        // returns Optional.empty() by default - the same thing that happens in production
-        // when the only matching row is a previous FAILED attempt (or none at all). The
-        // service must not treat that as "already done" and must start a fresh attempt.
         AirPollutionQuery result = airPollutionQueryService.create(request);
 
         assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.COMPLETED);

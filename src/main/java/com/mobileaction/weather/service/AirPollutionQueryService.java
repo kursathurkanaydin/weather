@@ -101,6 +101,14 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
             }
         }
 
+        else if (request.getStartDate().isAfter(request.getEndDate()))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
+                    request.getStartDate(),
+                    request.getEndDate()));
+        }
+
         if (!supportedCities.contains(cityName))
         {
             throw new CityNotSupportedException(String.format(

@@ -5,6 +5,8 @@ public class ErrorMessages
     public static final String AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_ID = "AirPollution not found with given id: %s";
     public static final String AIR_POLLUTION_QUERY_NOT_FOUND_WITH_GIVEN_ID = "AirPollutionQuery not found with given id: %s";
     public static final String AIR_POLLUTION_QUERY_CITY_REQUIRED = "City must not be null or empty";
+    public static final String AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE =
+            "startDate: %s must not be after endDate: %s";
     public static final String GECODE_NOT_FOUND_WITH_GIVEN_CITY="Couldn't find geocode for given city: %s";
     public static final String CITY_NOT_SUPPORTED_WITH_GIVEN_NAME="City not supported with given name: %s";
     public static final String INVALID_CONTAMINENT_WITH_GIVEN_NAME="Invalid contaminent name: %s";
