@@ -195,6 +195,20 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         }
     }
 
+    private AirPollutionHistoryDto getHistory(GeocodeDto geocode, AirPollutionQuery query)
+    {
+        AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
+        for (LocalDate currentDate = query.getStartDate(); !currentDate.isAfter(query.getEndDate()); currentDate = currentDate.plusDays(1))
+        {
+            AirPollutionHistoryEntryDto entryDto = crawlerClient.fetchAirPollutionHistory(
+                    geocode.getLat(), geocode.getLon(), currentDate, currentDate).getList().get(0);
+            airPollutionHistoryDto.getList().add(entryDto);
+        }
+
+        return airPollutionHistoryDto;
+    }
+
+
     private Map<LocalDate, AirPollutionHistoryEntryDto> groupLastEntryByDate(AirPollutionHistoryDto history)
     {
         if (history.getList() == null)
