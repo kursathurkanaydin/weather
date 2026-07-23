@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,14 +72,41 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
     @Override
-    public AirPollutionQuery create(AirPollutionQueryCreateRequest airPollutionQueryCreateRequest)
+    public AirPollutionQuery create(AirPollutionQueryCreateRequest request)
     {
-        if (airPollutionQueryCreateRequest.getCity() == null || airPollutionQueryCreateRequest.getCity().isBlank())
+        if (request.getCity() == null || request.getCity().isBlank())
         {
             throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
         }
 
-        String cityName = airPollutionQueryCreateRequest.getCity().toUpperCase();
+        String cityName = request.getCity().toUpperCase();
+        LocalDate today = LocalDate.now();
+        if (request.getStartDate() == null && request.getEndDate() == null)
+        {
+            DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+
+            request.setStartDate(today.minusWeeks(1));
+            request.setEndDate(today);
+        }
+
+        else if (request.getStartDate() == null)
+        {
+            request.setStartDate(request.getEndDate().minusWeeks(1));
+        }
+
+        else if (request.getEndDate() == null)
+        {
+            LocalDate date = request.getStartDate().plusWeeks(1);
+            if (date.isAfter(LocalDate.now()))
+            {
+                request.setEndDate(today);
+            }
+            else
+            {
+                request.setEndDate(date);
+            }
+        }
 
         if (!supportedCities.contains(cityName))
         {
@@ -88,36 +116,36 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         }
 
         if (airPollutionQueryRepository.existsByCityAndStartDateAndEndDate(
-                airPollutionQueryCreateRequest.getCity(),
-                airPollutionQueryCreateRequest.getStartDate(),
-                airPollutionQueryCreateRequest.getEndDate()))
+                request.getCity(),
+                request.getStartDate(),
+                request.getEndDate()))
         {
             Optional<AirPollutionQuery> airPollutionQuery = airPollutionQueryRepository.findByCityAndStartDateAndEndDate(
-                    airPollutionQueryCreateRequest.getCity(),
-                    airPollutionQueryCreateRequest.getStartDate(),
-                    airPollutionQueryCreateRequest.getEndDate()
+                    request.getCity(),
+                    request.getStartDate(),
+                    request.getEndDate()
             );
             if (airPollutionQuery.isPresent())
             {
                 log.info(LogMessages.AIR_POLLUTION_QUERY_ALREADY_EXECUTED,
-                        airPollutionQueryCreateRequest.getCity(),
-                        airPollutionQueryCreateRequest.getStartDate(),
-                        airPollutionQueryCreateRequest.getEndDate());
+                        request.getCity(),
+                        request.getStartDate(),
+                        request.getEndDate());
                 return airPollutionQuery.get();
             }
             throw new AirPollutionQueryNotFoundException(
                     String.format(
                             ErrorMessages.AIR_POLLUTION_QUERY_NOT_FOUNT_WITH_CITY_START_DATE_AND_END_DATE,
-                            airPollutionQueryCreateRequest.getCity(),
-                            airPollutionQueryCreateRequest.getStartDate(),
-                            airPollutionQueryCreateRequest.getEndDate())
+                            request.getCity(),
+                            request.getStartDate(),
+                            request.getEndDate())
             );
         }
 
         AirPollutionQuery newAirPollutionQuery = AirPollutionQuery.builder()
-                .city(airPollutionQueryCreateRequest.getCity())
-                .startDate(airPollutionQueryCreateRequest.getStartDate())
-                .endDate(airPollutionQueryCreateRequest.getEndDate())
+                .city(request.getCity())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
                 .status(AirPollutionQueryStatus.PENDING)
                 .build();
 
