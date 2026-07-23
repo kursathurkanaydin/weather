@@ -76,38 +76,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         }
 
         String cityName = request.getCity().toUpperCase();
-        LocalDate today = LocalDate.now();
-        if (request.getStartDate() == null && request.getEndDate() == null)
-        {
-            request.setStartDate(today.minusWeeks(1));
-            request.setEndDate(today);
-        }
-
-        else if (request.getStartDate() == null)
-        {
-            request.setStartDate(request.getEndDate().minusWeeks(1));
-        }
-
-        else if (request.getEndDate() == null)
-        {
-            LocalDate date = request.getStartDate().plusWeeks(1);
-            if (date.isAfter(LocalDate.now()))
-            {
-                request.setEndDate(today);
-            }
-            else
-            {
-                request.setEndDate(date);
-            }
-        }
-
-        else if (request.getStartDate().isAfter(request.getEndDate()))
-        {
-            throw new InvalidAirPollutionQueryException(String.format(
-                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
-                    request.getStartDate(),
-                    request.getEndDate()));
-        }
+        resolveDateRange(request);
 
         if (!supportedCities.contains(cityName))
         {
@@ -142,6 +111,42 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         process(newAirPollutionQuery);
 
         return findById(newAirPollutionQuery.getId());
+    }
+
+    private void resolveDateRange(AirPollutionQueryCreateRequest request)
+    {
+        LocalDate today = LocalDate.now();
+        if (request.getStartDate() == null && request.getEndDate() == null)
+        {
+            request.setStartDate(today.minusWeeks(1));
+            request.setEndDate(today);
+        }
+
+        else if (request.getStartDate() == null)
+        {
+            request.setStartDate(request.getEndDate().minusWeeks(1));
+        }
+
+        else if (request.getEndDate() == null)
+        {
+            LocalDate date = request.getStartDate().plusWeeks(1);
+            if (date.isAfter(today))
+            {
+                request.setEndDate(today);
+            }
+            else
+            {
+                request.setEndDate(date);
+            }
+        }
+
+        else if (request.getStartDate().isAfter(request.getEndDate()))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
+                    request.getStartDate(),
+                    request.getEndDate()));
+        }
     }
 
     @Override
