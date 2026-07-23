@@ -1,0 +1,20 @@
+package com.mobileaction.weather.service;
+
+import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.model.AirPollution;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+public interface IAirPollutionService
+{
+    List<AirPollution> findAll();
+
+    List<AirPollution> findAllWithPage(Pageable pageable);
+
+    void save(AirPollution airPollution);
+
+    AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest);
+
+    AirPollution findById(long id);
+}
