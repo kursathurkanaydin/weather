@@ -131,7 +131,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
             AirPollutionHistoryDto history = getHistory(geocode, airPollutionQuery);
 
             history.getList().forEach(entry ->
-                    airPollutionService.create(AirPollutionHistoryMapper.toCreateRequest(airPollutionQuery.getCity(), entry)));
+                    airPollutionService.create(AirPollutionHistoryMapper.toCreateRequest(airPollutionQuery.getCity().toUpperCase(), entry)));
 
             airPollutionQuery.setStatus(AirPollutionQueryStatus.COMPLETED);
         }

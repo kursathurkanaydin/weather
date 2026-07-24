@@ -11,4 +11,7 @@ public interface IAirPollutionRepository extends JpaRepository<AirPollution, Lon
     boolean existsByCityAndDate(String city, LocalDate date);
 
     List<AirPollution> findByDateBetween(LocalDate startDate, LocalDate endDate);
+
+    List<AirPollution> findByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate);
+
 }
