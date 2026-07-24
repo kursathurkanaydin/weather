@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -192,5 +193,44 @@ class AirPollutionServiceTest
         boolean result = airPollutionService.isExistsByDateAndCity("Ankara", date);
 
         assertThat(result).isTrue();
+    }
+
+    @Test
+    void findByDateBetween_delegatesToRepositoryWithoutCityNormalization()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        LocalDate endDate = LocalDate.of(2026, 7, 8);
+        List<AirPollution> airPollutions = List.of(AirPollution.builder().id(1L).city("Ankara").build());
+        when(airPollutionRepository.findByDateBetween(startDate, endDate)).thenReturn(airPollutions);
+
+        List<AirPollution> result = airPollutionService.findByDateBetween(startDate, endDate);
+
+        assertThat(result).isEqualTo(airPollutions);
+    }
+
+    @Test
+    void findByCityAndDateBetween_normalizesCityToUpperCaseBeforeDelegating()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        LocalDate endDate = LocalDate.of(2026, 7, 8);
+        List<AirPollution> airPollutions = List.of(AirPollution.builder().id(1L).city("ANKARA").build());
+        when(airPollutionRepository.findByCityAndDateBetween("ANKARA", startDate, endDate)).thenReturn(airPollutions);
+
+        List<AirPollution> result = airPollutionService.findByCityAndDateBetween("ankara", startDate, endDate);
+
+        assertThat(result).isEqualTo(airPollutions);
+    }
+
+    @Test
+    void findDatesByCityAndDateBetween_normalizesCityToUpperCaseBeforeDelegating()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        LocalDate endDate = LocalDate.of(2026, 7, 8);
+        Set<LocalDate> dates = Set.of(startDate, endDate);
+        when(airPollutionRepository.findDatesByCityAndDateBetween("ANKARA", startDate, endDate)).thenReturn(dates);
+
+        Set<LocalDate> result = airPollutionService.findDatesByCityAndDateBetween("ankara", startDate, endDate);
+
+        assertThat(result).isEqualTo(dates);
     }
 }
