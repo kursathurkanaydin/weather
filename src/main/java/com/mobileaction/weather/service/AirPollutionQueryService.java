@@ -19,7 +19,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
@@ -128,7 +130,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         {
             GeocodeDto geocode = crawlerClient.fetchGeocode(airPollutionQuery.getCity());
 
-            AirPollutionHistoryDto history = getHistory(geocode, airPollutionQuery);
+            AirPollutionHistoryDto history = getHistoryByOneFetch(geocode, airPollutionQuery);
 
             history.getList().forEach(entry ->
                     airPollutionService.create(AirPollutionHistoryMapper.toCreateRequest(airPollutionQuery.getCity().toUpperCase(), entry)));
@@ -146,14 +148,43 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         }
     }
 
+    private static LocalDate toLocalDate(long epochSecond)
+    {
+        return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
+    }
+
+    private AirPollutionHistoryDto getHistoryByOneFetch(GeocodeDto geocode, AirPollutionQuery query)
+    {
+        List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
+                geocode.getLat(), geocode.getLon(), query.getStartDate(), query.getEndDate()).getList();
+        AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
+        airPollutionHistoryDto.setList(new ArrayList<>());
+        String city = query.getCity();
+        LocalDate currentDate;
+        Set<LocalDate> existsDates = airPollutionService.findDatesByCityAndDateBetween(city, query.getStartDate(), query.getEndDate());
+        for (AirPollutionHistoryEntryDto entryDto : entries)
+        {
+            currentDate = toLocalDate(entryDto.getDt());
+            if (existsDates.contains(currentDate))
+            {
+                log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
+                continue;
+            }
+            airPollutionHistoryDto.getList().add(entryDto);
+        }
+
+        return airPollutionHistoryDto;
+    }
+
     private AirPollutionHistoryDto getHistory(GeocodeDto geocode, AirPollutionQuery query)
     {
         AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
         airPollutionHistoryDto.setList(new ArrayList<>());
         String city = query.getCity();
+        Set<LocalDate> existsDates = airPollutionService.findDatesByCityAndDateBetween(city, query.getStartDate(), query.getEndDate());
         for (LocalDate currentDate = query.getStartDate(); !currentDate.isAfter(query.getEndDate()); currentDate = currentDate.plusDays(1))
         {
-            if (airPollutionService.isExistsByDateAndCity(city, currentDate))
+            if (existsDates.contains(currentDate))
             {
                 log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
                 continue;
