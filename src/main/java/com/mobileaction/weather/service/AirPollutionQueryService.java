@@ -3,28 +3,23 @@ package com.mobileaction.weather.service;
 import com.mobileaction.weather.client.ICrawlerClient;
 import com.mobileaction.weather.constant.ErrorMessages;
 import com.mobileaction.weather.constant.LogMessages;
-import com.mobileaction.weather.dto.AirPollutionComponentsDto;
 import com.mobileaction.weather.dto.AirPollutionHistoryDto;
 import com.mobileaction.weather.dto.AirPollutionHistoryEntryDto;
 import com.mobileaction.weather.dto.GeocodeDto;
-import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.dto.mapper.AirPollutionHistoryMapper;
 import com.mobileaction.weather.dto.request.AirPollutionQueryCreateRequest;
-import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionQueryNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.model.AirPollutionQuery;
 import com.mobileaction.weather.model.AirPollutionQueryStatus;
-import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionQueryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
@@ -180,7 +175,7 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
             AirPollutionHistoryDto history = getHistory(geocode, airPollutionQuery);
 
             history.getList().forEach(entry ->
-                    airPollutionService.create(toAirPollutionCreateRequest(airPollutionQuery.getCity(), entry)));
+                    airPollutionService.create(AirPollutionHistoryMapper.toCreateRequest(airPollutionQuery.getCity(), entry)));
 
             airPollutionQuery.setStatus(AirPollutionQueryStatus.COMPLETED);
         }
@@ -221,36 +216,4 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
 
-    private LocalDate toLocalDate(long epochSecond)
-    {
-        return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
-    }
-
-    private AirPollutionCreateRequest toAirPollutionCreateRequest(String city, AirPollutionHistoryEntryDto entry)
-    {
-        LocalDate date = toLocalDate(entry.getDt());
-        AirPollutionComponentsDto components = entry.getComponents();
-
-        // OpenWeatherMap returns every component in ug/m3, CPCB's CO breakpoints are in mg/m3
-        List<CategoryCreateRequest> categories = List.of(
-                CategoryCreateRequest.builder()
-                        .contaminent(Contaminent.CO.name())
-                        .contaminentValue(components.getCo() / 1000)
-                        .build(),
-                CategoryCreateRequest.builder()
-                        .contaminent(Contaminent.O3.name())
-                        .contaminentValue(components.getO3())
-                        .build(),
-                CategoryCreateRequest.builder()
-                        .contaminent(Contaminent.SO2.name())
-                        .contaminentValue(components.getSo2())
-                        .build()
-        );
-
-        return AirPollutionCreateRequest.builder()
-                .city(city)
-                .date(date)
-                .categories(categories)
-                .build();
-    }
 }
