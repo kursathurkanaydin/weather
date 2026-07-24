@@ -34,7 +34,7 @@ class AirPollutionHistoryMapperTest
 
         CategoryCreateRequest co = result.getCategories().get(0);
         assertThat(co.getContaminent()).isEqualTo("CO");
-        assertThat(co.getContaminentValue()).isEqualTo(201.94 / 1000);
+        assertThat(co.getContaminentValue()).isEqualTo(0.20);
 
         CategoryCreateRequest o3 = result.getCategories().get(1);
         assertThat(o3.getContaminent()).isEqualTo("O3");
@@ -58,5 +58,19 @@ class AirPollutionHistoryMapperTest
         AirPollutionCreateRequest result = AirPollutionHistoryMapper.toCreateRequest("London", entry);
 
         assertThat(result.getDate()).isEqualTo(LocalDate.of(2026, 7, 1));
+    }
+
+    @Test
+    void toCreateRequest_coValue_isRoundedToTwoDecimals()
+    {
+        AirPollutionHistoryEntryDto entry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782918000L)
+                .components(AirPollutionComponentsDto.builder().co(1236.0).o3(1).so2(1).build())
+                .build();
+
+        AirPollutionCreateRequest result = AirPollutionHistoryMapper.toCreateRequest("Ankara", entry);
+
+        // 1236 / 1000 = 1.236 -> rounds up to 1.24
+        assertThat(result.getCategories().get(0).getContaminentValue()).isEqualTo(1.24);
     }
 }

@@ -22,7 +22,7 @@ public class AirPollutionHistoryMapper
         List<CategoryCreateRequest> categories = List.of(
                 CategoryCreateRequest.builder()
                         .contaminent(Contaminent.CO.name())
-                        .contaminentValue(components.getCo() / 1000)
+                        .contaminentValue(roundToTwoDecimals(components.getCo() / 1000))
                         .build(),
                 CategoryCreateRequest.builder()
                         .contaminent(Contaminent.O3.name())
@@ -44,5 +44,10 @@ public class AirPollutionHistoryMapper
     private static LocalDate toLocalDate(long epochSecond)
     {
         return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
+    }
+
+    private static double roundToTwoDecimals(double value)
+    {
+        return Math.round(value * 100.0) / 100.0;
     }
 }
