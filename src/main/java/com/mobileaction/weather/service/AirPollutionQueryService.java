@@ -110,50 +110,6 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         return findById(newAirPollutionQuery.getId());
     }
 
-    private void resolveDateRange(AirPollutionQueryCreateRequest request)
-    {
-        LocalDate today = LocalDate.now();
-        if (request.getStartDate() == null && request.getEndDate() == null)
-        {
-            request.setStartDate(today.minusWeeks(1));
-            request.setEndDate(today);
-        }
-
-        else if (request.getStartDate() == null)
-        {
-            request.setStartDate(request.getEndDate().minusWeeks(1));
-        }
-
-        else if (request.getEndDate() == null)
-        {
-            LocalDate date = request.getStartDate().plusWeeks(1);
-            if (date.isAfter(today))
-            {
-                request.setEndDate(today);
-            }
-            else
-            {
-                request.setEndDate(date);
-            }
-        }
-
-        else if (request.getStartDate().isAfter(request.getEndDate()))
-        {
-            throw new InvalidAirPollutionQueryException(String.format(
-                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
-                    request.getStartDate(),
-                    request.getEndDate()));
-        }
-
-        if (request.getStartDate().isBefore(EARLIEST_SUPPORTED_DATE))
-        {
-            throw new InvalidAirPollutionQueryException(String.format(
-                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_TOO_EARLY,
-                    request.getStartDate(),
-                    EARLIEST_SUPPORTED_DATE));
-        }
-    }
-
     @Override
     public List<AirPollutionQuery> findAll()
     {
@@ -215,5 +171,48 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         return airPollutionHistoryDto;
     }
 
+    private void resolveDateRange(AirPollutionQueryCreateRequest request)
+    {
+        LocalDate today = LocalDate.now();
+        if (request.getStartDate() == null && request.getEndDate() == null)
+        {
+            request.setStartDate(today.minusWeeks(1));
+            request.setEndDate(today);
+        }
+
+        else if (request.getStartDate() == null)
+        {
+            request.setStartDate(request.getEndDate().minusWeeks(1));
+        }
+
+        else if (request.getEndDate() == null)
+        {
+            LocalDate date = request.getStartDate().plusWeeks(1);
+            if (date.isAfter(today))
+            {
+                request.setEndDate(today);
+            }
+            else
+            {
+                request.setEndDate(date);
+            }
+        }
+
+        else if (request.getStartDate().isAfter(request.getEndDate()))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
+                    request.getStartDate(),
+                    request.getEndDate()));
+        }
+
+        if (request.getStartDate().isBefore(EARLIEST_SUPPORTED_DATE))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_TOO_EARLY,
+                    request.getStartDate(),
+                    EARLIEST_SUPPORTED_DATE));
+        }
+    }
 
 }
