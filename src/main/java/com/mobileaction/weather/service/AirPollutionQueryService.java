@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -180,10 +179,8 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
 
             AirPollutionHistoryDto history = getHistory(geocode, airPollutionQuery);
 
-            Map<LocalDate, AirPollutionHistoryEntryDto> lastEntryByDate = groupEntriesByDate(history);
-
-            lastEntryByDate.forEach((date, entry) ->
-                    airPollutionService.create(toAirPollutionCreateRequest(airPollutionQuery.getCity(), date, entry)));
+            history.getList().forEach(entry ->
+                    airPollutionService.create(toAirPollutionCreateRequest(airPollutionQuery.getCity(), entry)));
 
             airPollutionQuery.setStatus(AirPollutionQueryStatus.COMPLETED);
         }
@@ -224,28 +221,14 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
     }
 
 
-    private Map<LocalDate, AirPollutionHistoryEntryDto> groupEntriesByDate(AirPollutionHistoryDto history)
-    {
-        if (history.getList() == null)
-        {
-            return Map.of();
-        }
-
-        return history.getList().stream()
-                .collect(Collectors.toMap(
-                        entry -> toLocalDate(entry.getDt()),
-                        entry -> entry,
-                        (exists, newEntry) -> exists,
-                        LinkedHashMap::new));
-    }
-
     private LocalDate toLocalDate(long epochSecond)
     {
         return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
     }
 
-    private AirPollutionCreateRequest toAirPollutionCreateRequest(String city, LocalDate date, AirPollutionHistoryEntryDto entry)
+    private AirPollutionCreateRequest toAirPollutionCreateRequest(String city, AirPollutionHistoryEntryDto entry)
     {
+        LocalDate date = toLocalDate(entry.getDt());
         AirPollutionComponentsDto components = entry.getComponents();
 
         // OpenWeatherMap returns every component in ug/m3, CPCB's CO breakpoints are in mg/m3
