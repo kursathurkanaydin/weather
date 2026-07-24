@@ -196,6 +196,17 @@ class AirPollutionServiceTest
     }
 
     @Test
+    void findByCity_normalizesCityToUpperCaseBeforeDelegating()
+    {
+        List<AirPollution> airPollutions = List.of(AirPollution.builder().id(1L).city("ANKARA").build());
+        when(airPollutionRepository.findByCity("ANKARA")).thenReturn(airPollutions);
+
+        List<AirPollution> result = airPollutionService.findByCity("ankara");
+
+        assertThat(result).isEqualTo(airPollutions);
+    }
+
+    @Test
     void findByDateBetween_delegatesToRepositoryWithoutCityNormalization()
     {
         LocalDate startDate = LocalDate.of(2026, 7, 1);

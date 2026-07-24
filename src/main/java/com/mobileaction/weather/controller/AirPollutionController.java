@@ -54,11 +54,14 @@ public class AirPollutionController
     }
 
     @GetMapping("/city/{city}")
-    public ResponseEntity<List<AirPollutionResponse>> getByBetweenDates(
+    public ResponseEntity<List<AirPollutionResponse>> getByCity(
             @PathVariable String city
     )
     {
-        return ResponseEntity.ok(List.of());
+        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findByCity(city).stream()
+                .map(AirPollutionMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(airPollutionResponses);
     }
 
     @GetMapping("/city/{city}/range-date")

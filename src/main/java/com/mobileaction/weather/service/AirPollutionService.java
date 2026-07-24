@@ -93,6 +93,13 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
+    public List<AirPollution> findByCity(String city)
+    {
+        city = city.toUpperCase();
+        return airPollutionRepository.findByCity(city);
+    }
+
+    @Override
     public List<AirPollution> findByDateBetween(LocalDate startDate, LocalDate endDate)
     {
         return airPollutionRepository.findByDateBetween(startDate, endDate);

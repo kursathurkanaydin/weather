@@ -14,6 +14,8 @@ public interface IAirPollutionService
 
     List<AirPollution> findAllWithPage(Pageable pageable);
 
+    List<AirPollution> findByCity(String city);
+
     List<AirPollution> findByDateBetween(LocalDate startDate, LocalDate endDate);
 
     List<AirPollution> findByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate);
