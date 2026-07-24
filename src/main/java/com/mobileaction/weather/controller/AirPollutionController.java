@@ -2,6 +2,7 @@ package com.mobileaction.weather.controller;
 
 import com.mobileaction.weather.dto.mapper.AirPollutionMapper;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
 import com.mobileaction.weather.dto.response.AirPollutionResponse;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.service.IAirPollutionService;
@@ -25,21 +26,32 @@ public class AirPollutionController
         this.airPollutionService = airPollutionService;
     }
 
+//    @GetMapping
+//    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutions(
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "5") int size,
+//            @RequestParam(defaultValue = "id") String sortBy,
+//            @RequestParam(defaultValue = "true") boolean ascending
+//    )
+//    {
+//        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+//        Pageable pageable = PageRequest.of(page, size, sort);
+//        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findAllWithPage(pageable).stream()
+//                .map(AirPollutionMapper::toResponse)
+//                .toList();
+//        return ResponseEntity.ok(airPollutionResponses);
+//    }
+
     @GetMapping
-    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutions(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "true") boolean ascending
-    )
+    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutionsOfCityWithRangeDate(@ModelAttribute AirPollutionHistoryRequest request)
     {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findAllWithPage(pageable).stream()
+
+        List<AirPollutionResponse> airPollutionResponses = airPollutionService.handleGetAirPollutionHistoryRequest(request).stream()
                 .map(AirPollutionMapper::toResponse)
                 .toList();
         return ResponseEntity.ok(airPollutionResponses);
     }
+
 
     @GetMapping("/range-date")
     public ResponseEntity<List<AirPollutionResponse>> getByBetweenDates(

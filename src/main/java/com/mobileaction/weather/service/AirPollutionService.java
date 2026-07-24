@@ -1,35 +1,48 @@
 package com.mobileaction.weather.service;
 
+import com.mobileaction.weather.client.ICrawlerClient;
 import com.mobileaction.weather.constant.ErrorMessages;
+import com.mobileaction.weather.constant.LogMessages;
+import com.mobileaction.weather.dto.AirPollutionHistoryDto;
+import com.mobileaction.weather.dto.AirPollutionHistoryEntryDto;
+import com.mobileaction.weather.dto.GeocodeDto;
+import com.mobileaction.weather.dto.mapper.AirPollutionHistoryMapper;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
+import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.time.ZoneOffset;
+import java.util.*;
 
+@Slf4j
 @Service
 public class AirPollutionService implements IAirPollutionService
 {
+    private static final LocalDate EARLIEST_SUPPORTED_DATE = LocalDate.of(2020, 11, 27);
+
     private final IAirPollutionRepository airPollutionRepository;
     private final Set<String> supportedCities;
+    private final ICrawlerClient crawlerClient;
 
     public AirPollutionService(IAirPollutionRepository airPollutionRepository,
-                                @Qualifier("supportedCities") Set<String> supportedCities)
+                               @Qualifier("supportedCities") Set<String> supportedCities, ICrawlerClient crawlerClient)
     {
         this.airPollutionRepository = airPollutionRepository;
         this.supportedCities = supportedCities;
+        this.crawlerClient = crawlerClient;
     }
 
     @Override
@@ -41,12 +54,13 @@ public class AirPollutionService implements IAirPollutionService
     @Override
     public AirPollution findById(long id)
     {
-       Optional<AirPollution> dbAirPollution = airPollutionRepository.findById(id);
-       if (dbAirPollution.isPresent()) {
-           return dbAirPollution.get();
-       }
-       throw new AirPollutionNotFoundException(
-               String.format(ErrorMessages.AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_ID, id));
+        Optional<AirPollution> dbAirPollution = airPollutionRepository.findById(id);
+        if (dbAirPollution.isPresent())
+        {
+            return dbAirPollution.get();
+        }
+        throw new AirPollutionNotFoundException(
+                String.format(ErrorMessages.AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_ID, id));
     }
 
     @Override
@@ -132,6 +146,65 @@ public class AirPollutionService implements IAirPollutionService
         return airPollutionRepository.existsByCityAndDate(city, date);
     }
 
+    @Override
+    public List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
+    {
+        if (request.getCity() == null || request.getCity().isBlank())
+        {
+            throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
+        }
+
+
+        request.setCity(request.getCity().toUpperCase(Locale.ROOT));
+        String cityName = request.getCity();
+
+        validateSupportedCity(cityName);
+        resolveDateRange(request);
+        verifyDateRange(request);
+
+        GeocodeDto geocode = crawlerClient.fetchGeocode(request.getCity());
+
+        List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
+                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate()).getList();
+
+        AirPollutionHistoryDto historyDto = extractExistsRecords(request, entries);
+        historyDto.getList().forEach(entry ->
+                {
+                    create(AirPollutionHistoryMapper.toCreateRequest(request.getCity().toUpperCase(), entry));
+                }
+        );
+
+        return airPollutionRepository.findByCityAndDateBetween(request.getCity(), request.getStartDate(), request.getEndDate());
+    }
+
+    private AirPollutionHistoryDto extractExistsRecords(AirPollutionHistoryRequest request, List<AirPollutionHistoryEntryDto> entries)
+    {
+        AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
+        airPollutionHistoryDto.setList(new ArrayList<>());
+        String city = request.getCity();
+        LocalDate currentDate;
+        Set<LocalDate> existsDates = findDatesByCityAndDateBetween(city, request.getStartDate(), request.getEndDate());
+        Set<LocalDate> coveredDates = new HashSet<>();
+        for (AirPollutionHistoryEntryDto entryDto : entries)
+        {
+            currentDate = toLocalDate(entryDto.getDt());
+            if (existsDates.contains(currentDate) || coveredDates.contains(currentDate))
+            {
+                log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
+                continue;
+            }
+            airPollutionHistoryDto.getList().add(entryDto);
+            coveredDates.add(currentDate);
+        }
+
+        return airPollutionHistoryDto;
+    }
+
+    private static LocalDate toLocalDate(long epochSecond)
+    {
+        return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
+    }
+
     private void validateSupportedCity(String cityName)
     {
         if (!supportedCities.contains(cityName))
@@ -152,6 +225,55 @@ public class AirPollutionService implements IAirPollutionService
         {
             throw new InvalidContaminentException(
                     String.format(ErrorMessages.INVALID_CONTAMINENT_WITH_GIVEN_NAME, contaminentName));
+        }
+    }
+
+    private void resolveDateRange(AirPollutionHistoryRequest request)
+    {
+        LocalDate today = LocalDate.now();
+        if (request.getStartDate() == null && request.getEndDate() == null)
+        {
+            request.setStartDate(today.minusWeeks(1));
+            request.setEndDate(today);
+        }
+
+        else if (request.getStartDate() == null)
+        {
+            request.setStartDate(request.getEndDate().minusWeeks(1));
+        }
+
+        else if (request.getEndDate() == null)
+        {
+            LocalDate date = request.getStartDate().plusWeeks(1);
+            if (date.isAfter(today))
+            {
+                request.setEndDate(today);
+            }
+            else
+            {
+                request.setEndDate(date);
+            }
+        }
+    }
+
+    private void verifyDateRange(AirPollutionHistoryRequest request)
+    {
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+        if (startDate.isAfter(endDate))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
+                    startDate,
+                    endDate));
+        }
+
+        if (startDate.isBefore(EARLIEST_SUPPORTED_DATE))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_TOO_EARLY,
+                    startDate,
+                    EARLIEST_SUPPORTED_DATE));
         }
     }
 }

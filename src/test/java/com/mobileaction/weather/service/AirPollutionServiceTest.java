@@ -1,9 +1,16 @@
 package com.mobileaction.weather.service;
 
+import com.mobileaction.weather.client.ICrawlerClient;
+import com.mobileaction.weather.dto.AirPollutionComponentsDto;
+import com.mobileaction.weather.dto.AirPollutionHistoryDto;
+import com.mobileaction.weather.dto.AirPollutionHistoryEntryDto;
+import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
+import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
 import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AQICategory;
 import com.mobileaction.weather.model.AirPollution;
@@ -28,9 +35,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,13 +49,15 @@ class AirPollutionServiceTest
 {
     @Mock
     private IAirPollutionRepository airPollutionRepository;
+    @Mock
+    private ICrawlerClient crawlerClient;
 
     private AirPollutionService airPollutionService;
 
     @BeforeEach
     void setUp()
     {
-        airPollutionService = new AirPollutionService(airPollutionRepository, Set.of("ANKARA", "LONDON"));
+        airPollutionService = new AirPollutionService(airPollutionRepository, Set.of("ANKARA", "LONDON"), crawlerClient);
 
         // save() ordinarily assigns a DB-generated id; we emulate that here and wire
         // findById() to return the same instance, since create() reloads the entity
@@ -62,6 +75,15 @@ class AirPollutionServiceTest
                             .thenReturn(Optional.of(airPollution));
                     return airPollution;
                 });
+
+        // handleGetAirPollutionHistoryRequest() always resolves geocode first; tests that
+        // don't care about the crawler simply get an empty history back.
+        lenient().when(crawlerClient.fetchGeocode(anyString()))
+                .thenReturn(GeocodeDto.builder().lat(1.0).lon(2.0).build());
+        lenient().when(crawlerClient.fetchAirPollutionHistory(anyDouble(), anyDouble(), any(), any()))
+                .thenReturn(AirPollutionHistoryDto.builder().list(List.of()).build());
+        lenient().when(airPollutionRepository.findDatesByCityAndDateBetween(anyString(), any(), any()))
+                .thenReturn(Set.of());
     }
 
     @Test
@@ -267,5 +289,152 @@ class AirPollutionServiceTest
         Set<LocalDate> result = airPollutionService.findDatesByCityAndDateBetween("ankara", startDate, endDate);
 
         assertThat(result).isEqualTo(dates);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_blankCity_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder().city("  ").build();
+
+        assertThatThrownBy(() -> airPollutionService.handleGetAirPollutionHistoryRequest(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class);
+
+        verifyNoInteractions(crawlerClient);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_unsupportedCity_throwsCityNotSupportedException()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Paris")
+                .startDate(LocalDate.of(2026, 7, 1))
+                .endDate(LocalDate.of(2026, 7, 5))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionService.handleGetAirPollutionHistoryRequest(request))
+                .isInstanceOf(CityNotSupportedException.class)
+                .hasMessageContaining("PARIS");
+
+        verifyNoInteractions(crawlerClient);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_bothDatesNull_defaultsToLastWeekUntilToday()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder().city("Ankara").build();
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        LocalDate today = LocalDate.now();
+        assertThat(request.getStartDate()).isEqualTo(today.minusWeeks(1));
+        assertThat(request.getEndDate()).isEqualTo(today);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_startDateAfterEndDate_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(LocalDate.of(2026, 7, 10))
+                .endDate(LocalDate.of(2026, 7, 1))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionService.handleGetAirPollutionHistoryRequest(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class)
+                .hasMessageContaining("2026-07-10")
+                .hasMessageContaining("2026-07-01");
+
+        verifyNoInteractions(crawlerClient);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_startDateBeforeApiSupportedRange_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(LocalDate.of(2020, 11, 26))
+                .endDate(LocalDate.of(2020, 12, 1))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionService.handleGetAirPollutionHistoryRequest(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class)
+                .hasMessageContaining("2020-11-26")
+                .hasMessageContaining("2020-11-27");
+
+        verifyNoInteractions(crawlerClient);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_cachedDate_filtersItOutOfFetchedHistory()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        // 2026-07-01T12:00:00Z
+        AirPollutionHistoryEntryDto cachedEntry = AirPollutionHistoryEntryDto.builder().dt(1782907200L).build();
+        when(airPollutionRepository.findDatesByCityAndDateBetween("ANKARA", date, date))
+                .thenReturn(Set.of(date));
+        when(crawlerClient.fetchAirPollutionHistory(1.0, 2.0, date, date))
+                .thenReturn(AirPollutionHistoryDto.builder().list(List.of(cachedEntry)).build());
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        verify(airPollutionRepository, never()).save(any(AirPollution.class));
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_multipleEntriesForSameDay_keepsOnlyFirstEntryPerDay()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        AirPollutionHistoryEntryDto morningEntry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782885600L) // 2026-07-01T06:00:00Z
+                .components(AirPollutionComponentsDto.builder().co(1).o3(1).so2(1).build())
+                .build();
+        AirPollutionHistoryEntryDto noonEntry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782907200L) // 2026-07-01T12:00:00Z
+                .components(AirPollutionComponentsDto.builder().co(2).o3(2).so2(2).build())
+                .build();
+        when(crawlerClient.fetchAirPollutionHistory(1.0, 2.0, date, date))
+                .thenReturn(AirPollutionHistoryDto.builder().list(List.of(morningEntry, noonEntry)).build());
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        // one record per calendar day, not one per hourly entry
+        verify(airPollutionRepository, times(1)).save(any(AirPollution.class));
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_freshEntry_createsAirPollutionAndReturnsUpdatedList()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        AirPollutionHistoryEntryDto freshEntry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782907200L) // 2026-07-01T12:00:00Z
+                .components(AirPollutionComponentsDto.builder().co(1).o3(1).so2(1).build())
+                .build();
+        when(crawlerClient.fetchAirPollutionHistory(1.0, 2.0, date, date))
+                .thenReturn(AirPollutionHistoryDto.builder().list(List.of(freshEntry)).build());
+        List<AirPollution> expected = List.of(AirPollution.builder().id(1L).city("ANKARA").date(date).build());
+        when(airPollutionRepository.findByCityAndDateBetween("ANKARA", date, date)).thenReturn(expected);
+
+        List<AirPollution> result = airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        verify(airPollutionRepository).save(any(AirPollution.class));
+        assertThat(result).isEqualTo(expected);
     }
 }

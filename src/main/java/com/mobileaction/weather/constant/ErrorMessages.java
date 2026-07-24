@@ -3,7 +3,6 @@ package com.mobileaction.weather.constant;
 public class ErrorMessages
 {
     public static final String AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_ID = "AirPollution not found with given id: %s";
-    public static final String AIR_POLLUTION_QUERY_NOT_FOUND_WITH_GIVEN_ID = "AirPollutionQuery not found with given id: %s";
     public static final String AIR_POLLUTION_QUERY_CITY_REQUIRED = "City must not be null or empty";
     public static final String AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE =
             "startDate: %s must not be after endDate: %s";

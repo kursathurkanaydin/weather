@@ -23,14 +23,6 @@ public class GlobalExceptionHandler
         return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
-    @ExceptionHandler(AirPollutionQueryNotFoundException.class)
-    public ResponseEntity<ErrorDetails> handleAirPollutionQueryNotFoundException(
-            AirPollutionQueryNotFoundException ex,
-            HttpServletRequest request)
-    {
-        return buildResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND, null);
-    }
-
     @ExceptionHandler(CityNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleCityNotFoundException(
             CityNotFoundException ex,

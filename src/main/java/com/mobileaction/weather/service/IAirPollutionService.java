@@ -1,6 +1,7 @@
 package com.mobileaction.weather.service;
 
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
+import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
 import com.mobileaction.weather.model.AirPollution;
 import org.springframework.data.domain.Pageable;
 
@@ -31,4 +32,6 @@ public interface IAirPollutionService
     void delete(long id);
 
     boolean isExistsByDateAndCity(String city, LocalDate date);
+
+    List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request);
 }
