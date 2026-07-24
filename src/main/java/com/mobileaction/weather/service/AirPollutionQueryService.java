@@ -162,15 +162,17 @@ public class AirPollutionQueryService implements IAirPollutionQueryService
         String city = query.getCity();
         LocalDate currentDate;
         Set<LocalDate> existsDates = airPollutionService.findDatesByCityAndDateBetween(city, query.getStartDate(), query.getEndDate());
+        Set<LocalDate> coveredDates = new HashSet<>();
         for (AirPollutionHistoryEntryDto entryDto : entries)
         {
             currentDate = toLocalDate(entryDto.getDt());
-            if (existsDates.contains(currentDate))
+            if (existsDates.contains(currentDate) || coveredDates.contains(currentDate))
             {
                 log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
                 continue;
             }
             airPollutionHistoryDto.getList().add(entryDto);
+            coveredDates.add(currentDate);
         }
 
         return airPollutionHistoryDto;
