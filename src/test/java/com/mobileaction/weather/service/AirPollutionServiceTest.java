@@ -3,6 +3,7 @@ package com.mobileaction.weather.service;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
+import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AQICategory;
 import com.mobileaction.weather.model.AirPollution;
@@ -43,7 +44,7 @@ class AirPollutionServiceTest
     @BeforeEach
     void setUp()
     {
-        airPollutionService = new AirPollutionService(airPollutionRepository);
+        airPollutionService = new AirPollutionService(airPollutionRepository, Set.of("ANKARA", "LONDON"));
 
         // save() ordinarily assigns a DB-generated id; we emulate that here and wire
         // findById() to return the same instance, since create() reloads the entity
@@ -207,6 +208,16 @@ class AirPollutionServiceTest
     }
 
     @Test
+    void findByCity_unsupportedCity_throwsCityNotSupportedExceptionWithoutQueryingRepository()
+    {
+        assertThatThrownBy(() -> airPollutionService.findByCity("Paris"))
+                .isInstanceOf(CityNotSupportedException.class)
+                .hasMessageContaining("PARIS");
+
+        verify(airPollutionRepository, never()).findByCity(any());
+    }
+
+    @Test
     void findByDateBetween_delegatesToRepositoryWithoutCityNormalization()
     {
         LocalDate startDate = LocalDate.of(2026, 7, 1);
@@ -230,6 +241,19 @@ class AirPollutionServiceTest
         List<AirPollution> result = airPollutionService.findByCityAndDateBetween("ankara", startDate, endDate);
 
         assertThat(result).isEqualTo(airPollutions);
+    }
+
+    @Test
+    void findByCityAndDateBetween_unsupportedCity_throwsCityNotSupportedExceptionWithoutQueryingRepository()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        LocalDate endDate = LocalDate.of(2026, 7, 8);
+
+        assertThatThrownBy(() -> airPollutionService.findByCityAndDateBetween("Paris", startDate, endDate))
+                .isInstanceOf(CityNotSupportedException.class)
+                .hasMessageContaining("PARIS");
+
+        verify(airPollutionRepository, never()).findByCityAndDateBetween(any(), any(), any());
     }
 
     @Test

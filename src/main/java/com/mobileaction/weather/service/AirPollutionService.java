@@ -3,11 +3,13 @@ package com.mobileaction.weather.service;
 import com.mobileaction.weather.constant.ErrorMessages;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
+import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidContaminentException;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +23,13 @@ import java.util.Set;
 public class AirPollutionService implements IAirPollutionService
 {
     private final IAirPollutionRepository airPollutionRepository;
+    private final Set<String> supportedCities;
 
-    public AirPollutionService(IAirPollutionRepository airPollutionRepository)
+    public AirPollutionService(IAirPollutionRepository airPollutionRepository,
+                                @Qualifier("supportedCities") Set<String> supportedCities)
     {
         this.airPollutionRepository = airPollutionRepository;
+        this.supportedCities = supportedCities;
     }
 
     @Override
@@ -96,6 +101,7 @@ public class AirPollutionService implements IAirPollutionService
     public List<AirPollution> findByCity(String city)
     {
         city = city.toUpperCase();
+        validateSupportedCity(city);
         return airPollutionRepository.findByCity(city);
     }
 
@@ -109,6 +115,7 @@ public class AirPollutionService implements IAirPollutionService
     public List<AirPollution> findByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate)
     {
         city = city.toUpperCase();
+        validateSupportedCity(city);
         return airPollutionRepository.findByCityAndDateBetween(city, startDate, endDate);
     }
 
@@ -123,6 +130,16 @@ public class AirPollutionService implements IAirPollutionService
     public boolean isExistsByDateAndCity(String city, LocalDate date)
     {
         return airPollutionRepository.existsByCityAndDate(city, date);
+    }
+
+    private void validateSupportedCity(String cityName)
+    {
+        if (!supportedCities.contains(cityName))
+        {
+            throw new CityNotSupportedException(String.format(
+                    ErrorMessages.CITY_NOT_SUPPORTED_WITH_GIVEN_NAME,
+                    cityName));
+        }
     }
 
     private Contaminent resolveContaminent(String contaminentName)
