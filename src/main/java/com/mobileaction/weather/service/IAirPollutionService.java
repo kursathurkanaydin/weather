@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 public interface IAirPollutionService
 {
@@ -16,6 +17,8 @@ public interface IAirPollutionService
     List<AirPollution> findByDateBetween(LocalDate startDate, LocalDate endDate);
 
     List<AirPollution> findByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate);
+
+    Set<LocalDate> findDatesByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate);
 
     void save(AirPollution airPollution);
 

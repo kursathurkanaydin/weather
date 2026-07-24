@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class AirPollutionService implements IAirPollutionService
@@ -101,6 +103,13 @@ public class AirPollutionService implements IAirPollutionService
     {
         city = city.toUpperCase();
         return airPollutionRepository.findByCityAndDateBetween(city, startDate, endDate);
+    }
+
+    @Override
+    public Set<LocalDate> findDatesByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate)
+    {
+        city = city.toUpperCase();
+        return airPollutionRepository.findDatesByCityAndDateBetween(city, startDate, endDate);
     }
 
     @Override
