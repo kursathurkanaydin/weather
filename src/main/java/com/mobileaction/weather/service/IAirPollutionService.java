@@ -13,6 +13,8 @@ public interface IAirPollutionService
 
     List<AirPollution> findAllWithPage(Pageable pageable);
 
+    List<AirPollution> findByDateBetween(LocalDate startDate, LocalDate endDate);
+
     void save(AirPollution airPollution);
 
     AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest);

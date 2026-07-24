@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,10 +35,22 @@ public class AirPollutionController
     {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
-        List<AirPollutionResponse> airPollutions = airPollutionService.findAllWithPage(pageable).stream()
+        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findAllWithPage(pageable).stream()
                 .map(AirPollutionMapper::toResponse)
                 .toList();
-        return ResponseEntity.ok(airPollutions);
+        return ResponseEntity.ok(airPollutionResponses);
+    }
+
+    @GetMapping("/range-date")
+    public ResponseEntity<List<AirPollutionResponse>> getByBetweenDates(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate
+    )
+    {
+        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findByDateBetween(startDate, endDate).stream()
+                .map(AirPollutionMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(airPollutionResponses);
     }
 
     @PostMapping
