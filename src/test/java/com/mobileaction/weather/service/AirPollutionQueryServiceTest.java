@@ -351,6 +351,37 @@ class AirPollutionQueryServiceTest
     }
 
     @Test
+    void create_crawlerReturnsMultipleEntriesForSameDay_keepsOnlyFirstEntryPerDay()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionQueryCreateRequest request = AirPollutionQueryCreateRequest.builder()
+                .city("Ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        // OpenWeatherMap returns hourly entries for the requested range; both fall on 2026-07-01
+        AirPollutionHistoryEntryDto morningEntry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782885600L) // 2026-07-01T06:00:00Z
+                .components(AirPollutionComponentsDto.builder().co(1).o3(1).so2(1).build())
+                .build();
+        AirPollutionHistoryEntryDto noonEntry = AirPollutionHistoryEntryDto.builder()
+                .dt(1782907200L) // 2026-07-01T12:00:00Z
+                .components(AirPollutionComponentsDto.builder().co(2).o3(2).so2(2).build())
+                .build();
+        when(airPollutionService.findDatesByCityAndDateBetween("Ankara", date, date))
+                .thenReturn(Set.of());
+        when(crawlerClient.fetchAirPollutionHistory(1.0, 2.0, date, date))
+                .thenReturn(AirPollutionHistoryDto.builder().list(List.of(morningEntry, noonEntry)).build());
+
+        AirPollutionQuery result = airPollutionQueryService.create(request);
+
+        assertThat(result.getStatus()).isEqualTo(AirPollutionQueryStatus.COMPLETED);
+        // one record per calendar day, not one per hourly entry
+        verify(airPollutionService, times(1)).create(any());
+    }
+
+    @Test
     void create_geocodeLookupThrows_marksQueryAsFailedAndSavesIt()
     {
         LocalDate date = LocalDate.of(2026, 7, 1);
