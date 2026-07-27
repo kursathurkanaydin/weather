@@ -151,8 +151,6 @@ public class AirPollutionService implements IAirPollutionService
     @Override
     public List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
     {
-        request.setCity(request.getCity().toUpperCase(Locale.ROOT));
-
         resolveAirPollutionHistoryRequest(request);
         validateAirPollutionHistoryRequest(request);
 
@@ -208,6 +206,7 @@ public class AirPollutionService implements IAirPollutionService
 
     private void resolveAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
     {
+        request.setCity(request.getCity().toUpperCase(Locale.ROOT));
         resolveDateRange(request);
     }
 
