@@ -51,13 +51,15 @@ class AirPollutionServiceTest
     private IAirPollutionRepository airPollutionRepository;
     @Mock
     private ICrawlerClient crawlerClient;
+    @Mock
+    private GeoCodeService geoCodeService;
 
     private AirPollutionService airPollutionService;
 
     @BeforeEach
     void setUp()
     {
-        airPollutionService = new AirPollutionService(airPollutionRepository, Set.of("ANKARA", "LONDON"), crawlerClient);
+        airPollutionService = new AirPollutionService(airPollutionRepository, Set.of("ANKARA", "LONDON"), crawlerClient, geoCodeService);
 
         // save() ordinarily assigns a DB-generated id; we emulate that here and wire
         // findById() to return the same instance, since create() reloads the entity
@@ -78,7 +80,7 @@ class AirPollutionServiceTest
 
         // handleGetAirPollutionHistoryRequest() always resolves geocode first; tests that
         // don't care about the crawler simply get an empty history back.
-        lenient().when(crawlerClient.fetchGeocode(anyString()))
+        lenient().when(geoCodeService.getCoordinatesOfGivenCity(anyString()))
                 .thenReturn(GeocodeDto.builder().lat(1.0).lon(2.0).build());
         lenient().when(crawlerClient.fetchAirPollutionHistory(anyDouble(), anyDouble(), any(), any()))
                 .thenReturn(AirPollutionHistoryDto.builder().list(List.of()).build());

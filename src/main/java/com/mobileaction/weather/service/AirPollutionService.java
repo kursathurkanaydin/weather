@@ -157,7 +157,7 @@ public class AirPollutionService implements IAirPollutionService
         GeocodeDto geocode = geoCodeService.getCoordinatesOfGivenCity(request.getCity());
 
         List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
-                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate().minusDays(1)).getList();
+                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate()).getList();
 
         AirPollutionHistoryDto historyDto = extractExistsRecords(request, entries);
         historyDto.getList().forEach(entry ->
@@ -180,11 +180,18 @@ public class AirPollutionService implements IAirPollutionService
         for (AirPollutionHistoryEntryDto entryDto : entries)
         {
             currentDate = toLocalDate(entryDto.getDt());
-            if (existsDates.contains(currentDate) || coveredDates.contains(currentDate))
+
+            if (coveredDates.contains(currentDate))
+            {
+                continue;
+            }
+
+            if (existsDates.contains(currentDate))
             {
                 log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
                 continue;
             }
+
             airPollutionHistoryDto.getList().add(entryDto);
             coveredDates.add(currentDate);
         }
@@ -227,7 +234,6 @@ public class AirPollutionService implements IAirPollutionService
             throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
         }
     }
-
 
     private Contaminent resolveContaminent(String contaminentName)
     {
