@@ -1,8 +1,9 @@
 package com.mobileaction.weather.controller;
 
+import com.mobileaction.weather.dto.mapper.AirPollutionHistoryMapper;
 import com.mobileaction.weather.dto.mapper.AirPollutionMapper;
-import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
+import com.mobileaction.weather.dto.response.AirPollutionHistoryResponse;
 import com.mobileaction.weather.dto.response.AirPollutionResponse;
 import com.mobileaction.weather.model.AirPollution;
 import com.mobileaction.weather.service.IAirPollutionService;
@@ -43,13 +44,12 @@ public class AirPollutionController
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutionsOfCityWithRangeDate(@ModelAttribute AirPollutionHistoryRequest request)
+    public ResponseEntity<AirPollutionHistoryResponse> getAllAirPollutionsOfCityWithRangeDate(@ModelAttribute AirPollutionHistoryRequest request)
     {
 
-        List<AirPollutionResponse> airPollutionResponses = airPollutionService.handleGetAirPollutionHistoryRequest(request).stream()
-                .map(AirPollutionMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(airPollutionResponses);
+        List<AirPollution> airPollutions = airPollutionService.handleGetAirPollutionHistoryRequest(request);
+        AirPollutionHistoryResponse airPollutionHistoryResponse = AirPollutionHistoryMapper.toAirPollutionHistoryResponse(request.getCity(), airPollutions);
+        return ResponseEntity.ok(airPollutionHistoryResponse);
     }
 
     @GetMapping("/city/{city}")
