@@ -52,19 +52,6 @@ public class AirPollutionController
         return ResponseEntity.ok(airPollutionResponses);
     }
 
-
-    @GetMapping("/range-date")
-    public ResponseEntity<List<AirPollutionResponse>> getByBetweenDates(
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate
-    )
-    {
-        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findByDateBetween(startDate, endDate).stream()
-                .map(AirPollutionMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(airPollutionResponses);
-    }
-
     @GetMapping("/city/{city}")
     public ResponseEntity<List<AirPollutionResponse>> getByCity(
             @PathVariable String city
@@ -89,12 +76,6 @@ public class AirPollutionController
         return ResponseEntity.ok(airPollutionResponses);
     }
 
-    @PostMapping
-    public ResponseEntity<AirPollutionResponse> createAirPollution(@RequestBody AirPollutionCreateRequest airPollutionCreateRequest)
-    {
-        AirPollution newAirPollution = airPollutionService.create(airPollutionCreateRequest);
-        return ResponseEntity.ok(AirPollutionMapper.toResponse(newAirPollution));
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAirPollution(@PathVariable Long id)

@@ -149,23 +149,14 @@ public class AirPollutionService implements IAirPollutionService
     @Override
     public List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
     {
-        if (request.getCity() == null || request.getCity().isBlank())
-        {
-            throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
-        }
-
-
         request.setCity(request.getCity().toUpperCase(Locale.ROOT));
-        String cityName = request.getCity();
 
-        validateSupportedCity(cityName);
-        resolveDateRange(request);
-        verifyDateRange(request);
+        verifyAndResolveAirPollutionHistoryRequest(request);
 
         GeocodeDto geocode = crawlerClient.fetchGeocode(request.getCity());
 
         List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
-                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate()).getList();
+                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate().minusDays(1)).getList();
 
         AirPollutionHistoryDto historyDto = extractExistsRecords(request, entries);
         historyDto.getList().forEach(entry ->
@@ -205,6 +196,16 @@ public class AirPollutionService implements IAirPollutionService
         return Instant.ofEpochSecond(epochSecond).atZone(ZoneOffset.UTC).toLocalDate();
     }
 
+
+
+    private void verifyAndResolveAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
+    {
+        verifyCity(request.getCity());
+        validateSupportedCity(request.getCity());
+        resolveDateRange(request);
+        verifyDateRange(request);
+    }
+
     private void validateSupportedCity(String cityName)
     {
         if (!supportedCities.contains(cityName))
@@ -215,10 +216,23 @@ public class AirPollutionService implements IAirPollutionService
         }
     }
 
+    private void verifyCity(String city)
+    {
+        if (city == null || city.isBlank())
+        {
+            throw new InvalidAirPollutionQueryException(ErrorMessages.AIR_POLLUTION_QUERY_CITY_REQUIRED);
+        }
+    }
+
+
     private Contaminent resolveContaminent(String contaminentName)
     {
         try
         {
+            if (contaminentName == null || contaminentName.isBlank())
+            {
+                throw new  IllegalArgumentException();
+            }
             return Contaminent.valueOf(contaminentName.toUpperCase());
         }
         catch (IllegalArgumentException ex)
@@ -275,5 +289,10 @@ public class AirPollutionService implements IAirPollutionService
                     startDate,
                     EARLIEST_SUPPORTED_DATE));
         }
+    }
+
+    private void verifyCity(AirPollutionHistoryRequest request)
+    {
+
     }
 }
