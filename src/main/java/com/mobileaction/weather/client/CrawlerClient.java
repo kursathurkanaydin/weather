@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -41,6 +42,7 @@ public class CrawlerClient implements ICrawlerClient
                 cityName,
                 geocodes[0].getLat(),
                 geocodes[0].getLon());
+        geocodes[0].setCity(cityName.toUpperCase());
         return geocodes[0];
     }
 
