@@ -194,6 +194,7 @@ public class AirPollutionService implements IAirPollutionService
             if (existsDates.contains(currentDate))
             {
                 log.info(LogMessages.AIR_POLLUTION_ALREADY_FETCHED, city, currentDate);
+                coveredDates.add(currentDate);
                 continue;
             }
 
