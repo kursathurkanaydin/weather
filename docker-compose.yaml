@@ -14,6 +14,9 @@ services:
       - .env
   backend:
     build: .
+    environment:
+      DB_HOST: postgres
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
     ports:
       - "8080:8080"
     depends_on:

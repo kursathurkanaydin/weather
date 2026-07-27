@@ -20,7 +20,6 @@ import com.mobileaction.weather.repository.IAirPollutionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -164,10 +163,9 @@ public class AirPollutionService implements IAirPollutionService
         historyDto.getList().forEach(entry ->
                 {
                     create(AirPollutionHistoryMapper.toCreateRequest(request.getCity(), entry));
-                    log.info(LogMessages.AIR_POLLUTION_WITH_CITY_AND_START_DATE_AND_END_DATE_FETCHED_FROM_API,
+                    log.info(LogMessages.AIR_POLLUTION_WITH_CITY_AND_DATE_FETCHED_FROM_API,
                             request.getCity(),
-                            request.getStartDate(),
-                            request.getEndDate());
+                            toLocalDate(entry.getDt()));
                 }
         );
 
