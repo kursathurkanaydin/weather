@@ -151,6 +151,9 @@ public class AirPollutionService implements IAirPollutionService
     @Override
     public List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
     {
+        log.info(LogMessages.AIR_POLLUTION_HISTORY_REQUEST_RECEIVED,
+                request.getCity(), request.getStartDate(), request.getEndDate());
+
         resolveAirPollutionHistoryRequest(request);
         validateAirPollutionHistoryRequest(request);
 
