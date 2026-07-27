@@ -26,23 +26,23 @@ public class AirPollutionController
         this.airPollutionService = airPollutionService;
     }
 
-//    @GetMapping
-//    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutions(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size,
-//            @RequestParam(defaultValue = "id") String sortBy,
-//            @RequestParam(defaultValue = "true") boolean ascending
-//    )
-//    {
-//        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-//        Pageable pageable = PageRequest.of(page, size, sort);
-//        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findAllWithPage(pageable).stream()
-//                .map(AirPollutionMapper::toResponse)
-//                .toList();
-//        return ResponseEntity.ok(airPollutionResponses);
-//    }
-
     @GetMapping
+    public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending
+    )
+    {
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        List<AirPollutionResponse> airPollutionResponses = airPollutionService.findAllWithPage(pageable).stream()
+                .map(AirPollutionMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(airPollutionResponses);
+    }
+
+    @GetMapping("/history")
     public ResponseEntity<List<AirPollutionResponse>> getAllAirPollutionsOfCityWithRangeDate(@ModelAttribute AirPollutionHistoryRequest request)
     {
 
