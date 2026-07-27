@@ -20,15 +20,7 @@ public class GlobalExceptionHandler
             AirPollutionNotFoundException ex,
             HttpServletRequest request)
     {
-        return buildResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND, null);
-    }
-
-    @ExceptionHandler(AirPollutionQueryNotFoundException.class)
-    public ResponseEntity<ErrorDetails> handleAirPollutionQueryNotFoundException(
-            AirPollutionQueryNotFoundException ex,
-            HttpServletRequest request)
-    {
-        return buildResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND, null);
+        return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
     @ExceptionHandler(CityNotFoundException.class)
@@ -47,6 +39,23 @@ public class GlobalExceptionHandler
         return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
+    @ExceptionHandler(CityNotSupportedException.class)
+    public ResponseEntity<ErrorDetails> handleCityNotSupportedException(
+            CityNotSupportedException ex,
+            HttpServletRequest request
+    )
+    {
+        return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
+    }
+
+    @ExceptionHandler(InvalidContaminentException.class)
+    public ResponseEntity<ErrorDetails> handleInvalidContaminentException(
+            InvalidContaminentException ex,
+            HttpServletRequest request)
+    {
+        return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex,
@@ -60,6 +69,7 @@ public class GlobalExceptionHandler
 
         return buildResponse("Validation failed", request, HttpStatus.BAD_REQUEST, validationErrors);
     }
+
 
     private ResponseEntity<ErrorDetails> buildResponse(String message, HttpServletRequest request,
                                                         HttpStatus status, Map<String, String> validationErrors)

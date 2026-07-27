@@ -1,6 +1,7 @@
 package com.mobileaction.weather.client;
 
 import com.mobileaction.weather.constant.ErrorMessages;
+import com.mobileaction.weather.constant.LogMessages;
 import com.mobileaction.weather.dto.AirPollutionHistoryDto;
 import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.exception.CityNotFoundException;
@@ -36,16 +37,29 @@ public class CrawlerClient implements ICrawlerClient
             throw new CityNotFoundException(String.format(ErrorMessages.GECODE_NOT_FOUND_WITH_GIVEN_CITY, cityName));
         }
 
+        log.info(LogMessages.GEOCODE_RESOLVED_FOR_CITY,
+                cityName,
+                geocodes[0].getLat(),
+                geocodes[0].getLon());
         return geocodes[0];
     }
 
     @Override
     public AirPollutionHistoryDto fetchAirPollutionHistory(double lat, double lon, LocalDate startDate, LocalDate endDate)
     {
-        long start = startDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-        long end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+        try
+        {
+            long start = startDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+            long end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
 
-        String url = String.format(API_AIR_POLLUTION_HISTORY_URL, lat, lon, start, end, openWeatherApiKey);
-        return httpRequestExecutor.executeGetRequest(url, AirPollutionHistoryDto.class);
+            String url = String.format(API_AIR_POLLUTION_HISTORY_URL, lat, lon, start, end, openWeatherApiKey);
+            return httpRequestExecutor.executeGetRequest(url, AirPollutionHistoryDto.class);
+        }
+        catch (Exception exception)
+        {
+            log.error(LogMessages.AIR_POLLUTION_HISTORY_FETCH_FAILED, lat, lon, startDate, endDate);
+            throw new RuntimeException(exception.getMessage());
+        }
+
     }
 }
