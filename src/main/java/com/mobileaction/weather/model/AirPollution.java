@@ -47,4 +47,5 @@ public class AirPollution
     {
         return Objects.hash(id, city, date);
     }
+
 }

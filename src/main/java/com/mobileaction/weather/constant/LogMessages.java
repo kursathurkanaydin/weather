@@ -13,4 +13,6 @@ public class LogMessages
 
     public static final String AIR_POLLUTION_HISTORY_FETCH_FAILED =
             "Error occur with lat:{}, long:{}, start:{}, end:{}";
+    public static final String AIR_POLLUTION_WITH_CITY_AND_START_DATE_AND_END_DATE_FETCHED_FROM_API =
+            "Air Pollution with city:{}, startDate:{}, endDate:{} fetched from api";
 }
