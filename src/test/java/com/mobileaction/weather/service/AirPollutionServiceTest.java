@@ -432,7 +432,7 @@ class AirPollutionServiceTest
         when(crawlerClient.fetchAirPollutionHistory(1.0, 2.0, date, date))
                 .thenReturn(AirPollutionHistoryDto.builder().list(List.of(freshEntry)).build());
         List<AirPollution> expected = List.of(AirPollution.builder().id(1L).city("ANKARA").date(date).build());
-        when(airPollutionRepository.findByCityAndDateBetween("ANKARA", date, date)).thenReturn(expected);
+        when(airPollutionRepository.findByCityAndDateBetweenOrderByDateAsc("ANKARA", date, date)).thenReturn(expected);
 
         List<AirPollution> result = airPollutionService.handleGetAirPollutionHistoryRequest(request);
 
