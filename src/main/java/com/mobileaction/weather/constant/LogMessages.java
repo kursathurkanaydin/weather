@@ -17,4 +17,7 @@ public class LogMessages
             "Air Pollution with city:{}, date:{} fetched from api";
     public static final String AIR_POLLUTION_HISTORY_REQUEST_RECEIVED =
             "Received air pollution history request for city:{}, startDate:{}, endDate:{}";
+
+    public static final String EXCEPTION_HANDLED =
+            "Handled {} for request:{} -> status:{}, message:{}";
 }
