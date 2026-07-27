@@ -26,6 +26,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 	implementation("ch.qos.logback:logback-classic:1.5.37")
 	implementation platform('me.paulschwarz:spring-dotenv-bom:5.1.0')
+	developmentOnly platform('me.paulschwarz:spring-dotenv-bom:5.1.0')
 	developmentOnly 'me.paulschwarz:springboot4-dotenv'
 
 	// DB Connection
