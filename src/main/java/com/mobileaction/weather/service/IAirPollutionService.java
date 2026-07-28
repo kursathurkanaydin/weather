@@ -11,6 +11,8 @@ import java.util.Set;
 
 public interface IAirPollutionService
 {
+    void createAllAirPollutions(List<AirPollution> airPollutions);
+
     List<AirPollution> findAll();
 
     List<AirPollution> findAllWithPage(Pageable pageable);
@@ -26,6 +28,8 @@ public interface IAirPollutionService
     void save(AirPollution airPollution);
 
     AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest);
+
+    void saveAll(List<AirPollution> airPollutions);
 
     AirPollution findById(long id);
 
