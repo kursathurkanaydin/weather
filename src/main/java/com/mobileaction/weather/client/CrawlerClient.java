@@ -52,7 +52,7 @@ public class CrawlerClient implements ICrawlerClient
         try
         {
             long start = startDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-            long end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+            long end = endDate.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
 
             String url = String.format(API_AIR_POLLUTION_HISTORY_URL, lat, lon, start, end, openWeatherApiKey);
             return httpRequestExecutor.executeGetRequest(url, AirPollutionHistoryDto.class);
