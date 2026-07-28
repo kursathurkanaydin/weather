@@ -59,6 +59,14 @@ public class GlobalExceptionHandler
         return buildResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST, null);
     }
 
+    @ExceptionHandler(AirPollutionDeletionException.class)
+    public ResponseEntity<ErrorDetails> handleAirPollutionDeletionException(
+            AirPollutionDeletionException ex,
+            HttpServletRequest request)
+    {
+        return buildResponse(ex.getMessage(), request, HttpStatus.INTERNAL_SERVER_ERROR, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetails> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex,
