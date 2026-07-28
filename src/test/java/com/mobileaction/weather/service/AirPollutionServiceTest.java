@@ -8,6 +8,7 @@ import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
+import com.mobileaction.weather.exception.AirPollutionDeletionException;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -111,6 +115,32 @@ class AirPollutionServiceTest
                 .hasMessageContaining("404");
 
         verify(airPollutionRepository, never()).deleteById(id);
+    }
+
+    @Test
+    void delete_deletedConcurrentlyBetweenFindAndDelete_throwsAirPollutionNotFoundException()
+    {
+        long id = 5L;
+        when(airPollutionRepository.findById(id))
+                .thenReturn(Optional.of(AirPollution.builder().id(id).build()));
+        doThrow(new EmptyResultDataAccessException(1)).when(airPollutionRepository).deleteById(id);
+
+        assertThatThrownBy(() -> airPollutionService.delete(id))
+                .isInstanceOf(AirPollutionNotFoundException.class)
+                .hasMessageContaining("5");
+    }
+
+    @Test
+    void delete_repositoryThrowsDataAccessException_throwsAirPollutionDeletionException()
+    {
+        long id = 5L;
+        when(airPollutionRepository.findById(id))
+                .thenReturn(Optional.of(AirPollution.builder().id(id).build()));
+        doThrow(new DataIntegrityViolationException("constraint violation")).when(airPollutionRepository).deleteById(id);
+
+        assertThatThrownBy(() -> airPollutionService.delete(id))
+                .isInstanceOf(AirPollutionDeletionException.class)
+                .hasMessageContaining("5");
     }
 
     @Test

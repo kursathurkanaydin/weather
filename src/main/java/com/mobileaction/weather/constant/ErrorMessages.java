@@ -11,4 +11,6 @@ public class ErrorMessages
     public static final String GECODE_NOT_FOUND_WITH_GIVEN_CITY="Couldn't find geocode for given city: %s";
     public static final String CITY_NOT_SUPPORTED_WITH_GIVEN_NAME="City not supported with given name: %s";
     public static final String INVALID_CONTAMINENT_WITH_GIVEN_NAME="Invalid contaminent name: %s";
+    public static final String AIR_POLLUTION_DELETION_FAILED_WITH_GIVEN_ID =
+            "Couldn't delete AirPollution with given id: %s";
 }

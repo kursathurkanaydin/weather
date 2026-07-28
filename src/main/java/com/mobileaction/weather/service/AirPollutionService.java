@@ -9,6 +9,7 @@ import com.mobileaction.weather.dto.GeocodeDto;
 import com.mobileaction.weather.dto.mapper.AirPollutionHistoryMapper;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.AirPollutionHistoryRequest;
+import com.mobileaction.weather.exception.AirPollutionDeletionException;
 import com.mobileaction.weather.exception.AirPollutionNotFoundException;
 import com.mobileaction.weather.exception.CityNotSupportedException;
 import com.mobileaction.weather.exception.InvalidAirPollutionQueryException;
@@ -19,6 +20,8 @@ import com.mobileaction.weather.model.Contaminent;
 import com.mobileaction.weather.repository.IAirPollutionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -69,7 +72,20 @@ public class AirPollutionService implements IAirPollutionService
     public void delete(long id)
     {
         findById(id);
-        airPollutionRepository.deleteById(id);
+        try
+        {
+            airPollutionRepository.deleteById(id);
+        }
+        catch (EmptyResultDataAccessException ex)
+        {
+            throw new AirPollutionNotFoundException(
+                    String.format(ErrorMessages.AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_ID, id));
+        }
+        catch (DataAccessException ex)
+        {
+            throw new AirPollutionDeletionException(
+                    String.format(ErrorMessages.AIR_POLLUTION_DELETION_FAILED_WITH_GIVEN_ID, id));
+        }
     }
 
     @Override
