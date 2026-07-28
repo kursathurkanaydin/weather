@@ -57,6 +57,12 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
+    public void saveAll(List<AirPollution> airPollutions)
+    {
+        airPollutionRepository.saveAll(airPollutions);
+    }
+
+    @Override
     public AirPollution findById(long id)
     {
         Optional<AirPollution> dbAirPollution = airPollutionRepository.findById(id);
@@ -133,6 +139,12 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
+    public void createAllAirPollutions(List<AirPollution> airPollutions)
+    {
+        saveAll(airPollutions);
+    }
+
+    @Override
     public List<AirPollution> findAll()
     {
         return airPollutionRepository.findAll();
@@ -194,14 +206,17 @@ public class AirPollutionService implements IAirPollutionService
                 geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate()).getList();
 
         AirPollutionHistoryDto historyDto = extractExistsRecords(request, entries);
-        historyDto.getList().forEach(entry ->
-                {
-                    create(AirPollutionHistoryMapper.toCreateRequest(request.getCity(), entry));
+
+        List<AirPollution> airPollutions = historyDto.getList().stream().map(entry -> {
+                    AirPollutionCreateRequest airPollutionCreateRequest = AirPollutionHistoryMapper.toCreateRequest(request.getCity(), entry);
                     log.info(LogMessages.AIR_POLLUTION_WITH_CITY_AND_DATE_FETCHED_FROM_API,
-                            request.getCity(),
-                            toLocalDate(entry.getDt()));
+                            airPollutionCreateRequest.getCity(),
+                            airPollutionCreateRequest.getDate());
+                    return toAirPollutionFromAirPollutionCreateRequest(airPollutionCreateRequest);
                 }
-        );
+        ).toList();
+
+        createAllAirPollutions(airPollutions);
 
         return airPollutionRepository.findByCityAndDateBetweenOrderByDateAsc(request.getCity(), request.getStartDate(), request.getEndDate());
     }
@@ -279,7 +294,7 @@ public class AirPollutionService implements IAirPollutionService
         {
             if (contaminentName == null || contaminentName.isBlank())
             {
-                throw new  IllegalArgumentException();
+                throw new IllegalArgumentException();
             }
             return Contaminent.valueOf(contaminentName.toUpperCase());
         }
@@ -337,5 +352,33 @@ public class AirPollutionService implements IAirPollutionService
                     startDate,
                     EARLIEST_SUPPORTED_DATE));
         }
+    }
+
+    private AirPollution toAirPollutionFromAirPollutionCreateRequest(AirPollutionCreateRequest airPollutionCreateRequest)
+    {
+        AirPollution airPollution = AirPollution.builder()
+                .city(airPollutionCreateRequest.getCity())
+                .date(airPollutionCreateRequest.getDate())
+                .build();
+
+        List<Category> categories = getCategoriesFromAirPollutionCreateRequest(airPollution, airPollutionCreateRequest);
+        airPollution.setCategories(categories);
+        return airPollution;
+    }
+
+    private List<Category> getCategoriesFromAirPollutionCreateRequest(AirPollution airPollution, AirPollutionCreateRequest airPollutionCreateRequest)
+    {
+        return airPollutionCreateRequest.getCategories().stream()
+                .map(category ->
+                {
+                    Contaminent contaminent = resolveContaminent(category.getContaminent());
+                    return Category.builder()
+                            .contaminent(contaminent)
+                            .aqiCategory(contaminent.resolveAqiCategory(category.getContaminentValue()))
+                            .airPollution(airPollution)
+                            .contaminentValue(category.getContaminentValue())
+                            .build();
+                })
+                .toList();
     }
 }

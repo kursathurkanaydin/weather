@@ -21,6 +21,7 @@ import com.mobileaction.weather.repository.IAirPollutionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
@@ -467,7 +469,9 @@ class AirPollutionServiceTest
 
         airPollutionService.handleGetAirPollutionHistoryRequest(request);
 
-        verify(airPollutionRepository, never()).save(any(AirPollution.class));
+        ArgumentCaptor<List<AirPollution>> savedCaptor = ArgumentCaptor.forClass(List.class);
+        verify(airPollutionRepository).saveAll(savedCaptor.capture());
+        assertThat(savedCaptor.getValue()).isEmpty();
     }
 
     @Test
@@ -494,7 +498,9 @@ class AirPollutionServiceTest
         airPollutionService.handleGetAirPollutionHistoryRequest(request);
 
         // one record per calendar day, not one per hourly entry
-        verify(airPollutionRepository, times(1)).save(any(AirPollution.class));
+        ArgumentCaptor<List<AirPollution>> savedCaptor = ArgumentCaptor.forClass(List.class);
+        verify(airPollutionRepository, times(1)).saveAll(savedCaptor.capture());
+        assertThat(savedCaptor.getValue()).hasSize(1);
     }
 
     @Test
@@ -518,7 +524,7 @@ class AirPollutionServiceTest
 
         List<AirPollution> result = airPollutionService.handleGetAirPollutionHistoryRequest(request);
 
-        verify(airPollutionRepository).save(any(AirPollution.class));
+        verify(airPollutionRepository).saveAll(anyList());
         assertThat(result).isEqualTo(expected);
     }
 }
