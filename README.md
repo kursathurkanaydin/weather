@@ -123,6 +123,7 @@ Once the app is running, interactive API docs are available at:
 | GET | `/api/air-pollution/city/{city}` | List all stored records for a given city |
 | GET | `/api/air-pollution/city/{city}/range-date?startDate={date}&endDate={date}` | List stored records for a city within a date range |
 | DELETE | `/api/air-pollution/{id}` | Delete an air pollution record by id |
+| DELETE | `/api/air-pollution/{city}/{date}` | Delete an air pollution record by city and date |
 
 Dates are in `yyyy-MM-dd` format.
 

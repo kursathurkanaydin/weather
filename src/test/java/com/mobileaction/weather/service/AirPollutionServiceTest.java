@@ -144,6 +144,58 @@ class AirPollutionServiceTest
     }
 
     @Test
+    void deleteByCityAndDate_existingRecord_deletesFromRepository()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollution airPollution = AirPollution.builder().id(5L).city("ANKARA").date(date).build();
+        when(airPollutionRepository.findByCityAndDate("ANKARA", date)).thenReturn(Optional.of(airPollution));
+        when(airPollutionRepository.findById(5L)).thenReturn(Optional.of(airPollution));
+
+        airPollutionService.deleteByCityAndDate("ankara", date);
+
+        verify(airPollutionRepository).deleteById(5L);
+    }
+
+    @Test
+    void deleteByCityAndDate_unsupportedCity_throwsCityNotSupportedExceptionWithoutQueryingRepository()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+
+        assertThatThrownBy(() -> airPollutionService.deleteByCityAndDate("Paris", date))
+                .isInstanceOf(CityNotSupportedException.class)
+                .hasMessageContaining("PARIS");
+
+        verify(airPollutionRepository, never()).findByCityAndDate(any(), any());
+    }
+
+    @Test
+    void deleteByCityAndDate_noRecordForCityAndDate_throwsAirPollutionNotFoundException()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        when(airPollutionRepository.findByCityAndDate("ANKARA", date)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> airPollutionService.deleteByCityAndDate("ankara", date))
+                .isInstanceOf(AirPollutionNotFoundException.class)
+                .hasMessageContaining("ANKARA")
+                .hasMessageContaining(date.toString());
+
+        verify(airPollutionRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void deleteByCityAndDate_deletedConcurrently_throwsAirPollutionNotFoundException()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollution airPollution = AirPollution.builder().id(5L).city("ANKARA").date(date).build();
+        when(airPollutionRepository.findByCityAndDate("ANKARA", date)).thenReturn(Optional.of(airPollution));
+        when(airPollutionRepository.findById(5L)).thenReturn(Optional.of(airPollution));
+        doThrow(new EmptyResultDataAccessException(1)).when(airPollutionRepository).deleteById(5L);
+
+        assertThatThrownBy(() -> airPollutionService.deleteByCityAndDate("ankara", date))
+                .isInstanceOf(AirPollutionNotFoundException.class);
+    }
+
+    @Test
     void findById_existingId_returnsAirPollution()
     {
         long id = 7L;

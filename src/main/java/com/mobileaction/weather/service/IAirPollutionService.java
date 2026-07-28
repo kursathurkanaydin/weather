@@ -31,6 +31,8 @@ public interface IAirPollutionService
 
     void delete(long id);
 
+    void deleteByCityAndDate(String city, LocalDate date);
+
     boolean isExistsByDateAndCity(String city, LocalDate date);
 
     List<AirPollution> handleGetAirPollutionHistoryRequest(AirPollutionHistoryRequest request);

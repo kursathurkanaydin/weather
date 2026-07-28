@@ -13,4 +13,6 @@ public class ErrorMessages
     public static final String INVALID_CONTAMINENT_WITH_GIVEN_NAME="Invalid contaminent name: %s";
     public static final String AIR_POLLUTION_DELETION_FAILED_WITH_GIVEN_ID =
             "Couldn't delete AirPollution with given id: %s";
+    public static final String AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_CITY_AND_DATE =
+            "AirPollution not found with given city: %s and date: %s";
 }
