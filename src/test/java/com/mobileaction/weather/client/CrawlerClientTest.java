@@ -95,7 +95,7 @@ class CrawlerClientTest
                 """;
 
         mockServer.expect(requestTo(
-                        "http://api.openweathermap.org/data/2.5/air_pollution/history?lat=39.92&lon=32.85&start=1782864000&end=1782950400&appid=test-api-key"))
+                        "http://api.openweathermap.org/data/2.5/air_pollution/history?lat=39.92&lon=32.85&start=1782864000&end=1782864000&appid=test-api-key"))
                 .andRespond(withSuccess(realApiResponse, MediaType.APPLICATION_JSON));
 
         AirPollutionHistoryDto result = crawlerClient.fetchAirPollutionHistory(39.92, 32.85, date, date);
@@ -114,7 +114,7 @@ class CrawlerClientTest
         LocalDate date = LocalDate.of(2026, 7, 1);
 
         mockServer.expect(requestTo(
-                        "http://api.openweathermap.org/data/2.5/air_pollution/history?lat=39.92&lon=32.85&start=1782864000&end=1782950400&appid=test-api-key"))
+                        "http://api.openweathermap.org/data/2.5/air_pollution/history?lat=39.92&lon=32.85&start=1782864000&end=1782864000&appid=test-api-key"))
                 .andRespond(withServerError());
 
         assertThatThrownBy(() -> crawlerClient.fetchAirPollutionHistory(39.92, 32.85, date, date))
