@@ -89,6 +89,21 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
+    public void deleteByCityAndDate(String city, LocalDate date)
+    {
+        String normalizedCity = city.toUpperCase();
+        validateSupportedCity(normalizedCity);
+
+        AirPollution airPollution = airPollutionRepository.findByCityAndDate(normalizedCity, date)
+                .orElseThrow(() -> new AirPollutionNotFoundException(String.format(
+                        ErrorMessages.AIR_POLLUTION_NOT_FOUND_WITH_GIVEN_CITY_AND_DATE,
+                        normalizedCity,
+                        date)));
+
+        delete(airPollution.getId());
+    }
+
+    @Override
     public AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest)
     {
         AirPollution airPollution = AirPollution.builder()

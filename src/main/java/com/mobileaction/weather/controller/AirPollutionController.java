@@ -84,4 +84,13 @@ public class AirPollutionController
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{city}/{date}")
+    public ResponseEntity<Void> deleteAirPollutionByCityAndDate(
+            @PathVariable String city,
+            @PathVariable LocalDate date)
+    {
+        airPollutionService.deleteByCityAndDate(city, date);
+        return ResponseEntity.noContent().build();
+    }
+
 }
