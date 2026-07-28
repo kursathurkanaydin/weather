@@ -2,8 +2,13 @@ package com.mobileaction.weather.dto.mapper;
 
 import com.mobileaction.weather.dto.AirPollutionComponentsDto;
 import com.mobileaction.weather.dto.AirPollutionHistoryEntryDto;
+import com.mobileaction.weather.dto.AirPollutionHistoryResultDto;
 import com.mobileaction.weather.dto.request.AirPollutionCreateRequest;
 import com.mobileaction.weather.dto.request.CategoryCreateRequest;
+import com.mobileaction.weather.dto.response.AirPollutionHistoryResponse;
+import com.mobileaction.weather.dto.response.CategoryResponse;
+import com.mobileaction.weather.model.AirPollution;
+import com.mobileaction.weather.model.Category;
 import com.mobileaction.weather.model.Contaminent;
 
 import java.time.Instant;
@@ -39,6 +44,28 @@ public class AirPollutionHistoryMapper
                 .date(date)
                 .categories(categories)
                 .build();
+    }
+
+    public static AirPollutionHistoryResponse toAirPollutionHistoryResponse(String city, List<AirPollution> airPollutions)
+    {
+        List<AirPollutionHistoryResultDto> airPollutionHistoryResultDtoList = airPollutions.stream()
+                .map(AirPollutionHistoryMapper::toAirPollutionHistoryResultDto).toList();
+
+        return AirPollutionHistoryResponse.builder()
+                .city(city)
+                .results(airPollutionHistoryResultDtoList)
+                .build();
+    }
+
+    public static AirPollutionHistoryResultDto toAirPollutionHistoryResultDto(AirPollution airPollution)
+    {
+
+        List<CategoryResponse> categories = CategoryMapper.getCategoryResponseListOfAirPollution(airPollution);
+        return AirPollutionHistoryResultDto.builder()
+                .date(airPollution.getDate())
+                .categories(categories)
+                .build();
+
     }
 
     private static LocalDate toLocalDate(long epochSecond)

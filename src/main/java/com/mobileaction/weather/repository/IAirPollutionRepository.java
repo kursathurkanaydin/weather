@@ -25,4 +25,6 @@ public interface IAirPollutionRepository extends JpaRepository<AirPollution, Lon
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    List<AirPollution> findByCityAndDateBetweenOrderByDateAsc(String city, LocalDate startDate, LocalDate endDate);
 }
