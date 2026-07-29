@@ -40,4 +40,6 @@ out/
 #
 logs
 
-.env
+backend/.env
+
+backend/api-docs.json
