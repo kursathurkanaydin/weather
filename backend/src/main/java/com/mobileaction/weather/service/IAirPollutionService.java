@@ -25,9 +25,9 @@ public interface IAirPollutionService
 
     Set<LocalDate> findDatesByCityAndDateBetween(String city, LocalDate startDate, LocalDate endDate);
 
-    void save(AirPollution airPollution);
+    AirPollution save(AirPollution airPollution);
 
-    AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest);
+    AirPollution createAirPollution(AirPollutionCreateRequest airPollutionCreateRequest);
 
     void saveAll(List<AirPollution> airPollutions);
 

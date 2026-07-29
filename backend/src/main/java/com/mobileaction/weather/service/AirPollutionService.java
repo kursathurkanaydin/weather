@@ -51,9 +51,9 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
-    public void save(AirPollution airPollution)
+    public AirPollution save(AirPollution airPollution)
     {
-        airPollutionRepository.save(airPollution);
+        return airPollutionRepository.save(airPollution);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class AirPollutionService implements IAirPollutionService
     }
 
     @Override
-    public AirPollution create(AirPollutionCreateRequest airPollutionCreateRequest)
+    public AirPollution createAirPollution(AirPollutionCreateRequest airPollutionCreateRequest)
     {
         AirPollution airPollution = AirPollution.builder()
                 .city(airPollutionCreateRequest.getCity())
@@ -133,9 +133,7 @@ public class AirPollutionService implements IAirPollutionService
 
 
         airPollution.setCategories(categoryList);
-        save(airPollution);
-
-        return findById(airPollution.getId());
+        return save(airPollution);
     }
 
     @Override

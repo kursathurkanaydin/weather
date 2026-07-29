@@ -232,7 +232,7 @@ class AirPollutionServiceTest
                         CategoryCreateRequest.builder().contaminent("O3").contaminentValue(9999).build()))
                 .build();
 
-        AirPollution result = airPollutionService.create(request);
+        AirPollution result = airPollutionService.createAirPollution(request);
 
         assertThat(result.getCity()).isEqualTo("Ankara");
         assertThat(result.getDate()).isEqualTo(date);
@@ -261,7 +261,7 @@ class AirPollutionServiceTest
                         CategoryCreateRequest.builder().contaminent("XX").contaminentValue(1.0).build()))
                 .build();
 
-        assertThatThrownBy(() -> airPollutionService.create(request))
+        assertThatThrownBy(() -> airPollutionService.createAirPollution(request))
                 .isInstanceOf(InvalidContaminentException.class)
                 .hasMessageContaining("XX");
 
