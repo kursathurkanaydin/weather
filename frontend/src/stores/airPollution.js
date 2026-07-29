@@ -14,7 +14,7 @@ export const useAirPollutionStore = defineStore('airPollution', {
     records: [],
     page: 0,
     size: 10,
-    sortBy: 'id',
+    sortBy: 'date',
     ascending: true,
     loading: false,
     error: null,
