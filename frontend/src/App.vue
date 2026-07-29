@@ -3,16 +3,10 @@ import NavBar from './components/NavBar.vue'
 </script>
 
 <template>
-  <NavBar />
-  <main class="page">
-    <RouterView />
-  </main>
+  <div class="min-h-screen">
+    <NavBar />
+    <main class="mx-auto max-w-4xl px-6 py-8">
+      <RouterView />
+    </main>
+  </div>
 </template>
-
-<style scoped>
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-</style>
