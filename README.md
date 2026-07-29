@@ -63,7 +63,7 @@ weather/
 ### 1. Clone the project
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/kursathurkanaydin/weather.git
 cd weather
 ```
 
