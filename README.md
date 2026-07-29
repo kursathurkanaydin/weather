@@ -43,6 +43,8 @@ weather/
 
 **Frontend**
 - Vue 3 + Vite
+- Vue Router, Pinia
+- Axios
 - pnpm
 
 **Infra**
@@ -66,13 +68,13 @@ cd weather
 
 ### 2. Set up your environment variables
 
-Copy the example file and fill in your own values:
+Copy the example file into `backend/.env` and fill in your own values (this is where both the backend and Docker Compose read it from):
 
 ```bash
-cp .env.example .env
+cp .env.example backend/.env
 ```
 
-Open `.env` and edit it:
+Open `backend/.env` and edit it:
 
 | Variable | Description |
 |---|---|
@@ -90,18 +92,22 @@ Open `.env` and edit it:
 
 This starts Postgres, the backend, and the frontend together, and runs the Flyway migrations automatically.
 
+`--env-file backend/.env` is required: Docker Compose only auto-loads a `.env` from the project root, and ours lives in `backend/` alongside the app that actually needs it.
+
 ```bash
-docker compose up --build
+docker compose --env-file backend/.env up --build
 ```
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8080`
 - Postgres: exposed on `localhost:5433` (mapped from the container's `5432`) if you want to inspect it with a DB client
 
+The frontend container is served by nginx, which proxies `/api/*` requests to the backend service - no CORS setup needed.
+
 To stop everything:
 
 ```bash
-docker compose down
+docker compose --env-file backend/.env down
 ```
 
 ### Option B: Run each part locally
@@ -113,7 +119,7 @@ cd backend
 ./gradlew bootRun
 ```
 
-Make sure `OPENWEATHER_API_KEY` is set in your `.env` file (or as an environment variable) before starting.
+Make sure `OPENWEATHER_API_KEY` is set in `backend/.env` (or as an environment variable) before starting.
 The H2 console is available at `http://localhost:8080/h2-console` while running with the `dev` profile.
 
 **Frontend**:
@@ -123,6 +129,8 @@ cd frontend
 pnpm install
 pnpm run dev
 ```
+
+The Vite dev server proxies `/api/*` to `http://localhost:8080` (see `frontend/vite.config.js`), so the backend must be running for the frontend to work.
 
 ### Running backend tests
 
@@ -171,4 +179,24 @@ backend/src/main/java/com/mobileaction/weather
 ├── model         # JPA entities and enums
 ├── repository    # Spring Data JPA repositories
 └── service       # Business logic
+```
+
+## Frontend
+
+Pages (Vue Router):
+
+| Path | Description |
+|---|---|
+| `/` | Browse stored records, filter by city, delete a record |
+| `/history` | Fetch (and store) air pollution history for a city/date range |
+| `/geocode` | Look up coordinates for a city name |
+
+```
+frontend/src
+├── api          # axios calls to the backend, one file per resource
+├── components   # shared UI (NavBar, CitySelect, AqiBadge, CategoryList)
+├── constants     # supported cities, AQI category labels
+├── router        # Vue Router routes
+├── stores        # Pinia stores (one per resource, holds state + calls the api layer)
+└── views         # route-level pages
 ```

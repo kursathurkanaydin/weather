@@ -1,0 +1,1 @@
+export const SUPPORTED_CITIES = ['LONDON', 'BARCELONA', 'ANKARA', 'TOKYO', 'MUMBAI']
