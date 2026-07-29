@@ -22,13 +22,14 @@ weather/
 ├── backend/           # Spring Boot API
 │   ├── build.gradle
 │   ├── src/
+│   ├── .env.example
 │   └── Dockerfile
 ├── frontend/           # Vue 3 (Vite) web client
 │   ├── package.json
 │   ├── src/
+│   ├── .env.example
 │   └── Dockerfile
 ├── docker-compose.yaml # runs postgres + backend + frontend together
-├── .env.example
 └── README.md
 ```
 
@@ -71,7 +72,7 @@ cd weather
 Copy the example file into `backend/.env` and fill in your own values (this is where both the backend and Docker Compose read it from):
 
 ```bash
-cp .env.example backend/.env
+cp backend/.env.example backend/.env
 ```
 
 Open `backend/.env` and edit it:
@@ -130,7 +131,7 @@ pnpm install
 pnpm run dev
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:8080` (see `frontend/vite.config.js`), so the backend must be running for the frontend to work.
+The Vite dev server proxies `/api/*` to `http://localhost:8080` (see `frontend/vite.config.js`), so the backend must be running for the frontend to work. The frontend doesn't need any environment variables by default; see `frontend/.env.example` if you need to override the API base URL.
 
 ### Running backend tests
 
