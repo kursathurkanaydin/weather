@@ -504,6 +504,83 @@ class AirPollutionServiceTest
     }
 
     @Test
+    void handleGetAirPollutionHistoryRequest_onlyStartDateProvided_resolvesEndDateOneWeekLater()
+    {
+        LocalDate startDate = LocalDate.of(2026, 7, 1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(startDate)
+                .build();
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        assertThat(request.getStartDate()).isEqualTo(startDate);
+        assertThat(request.getEndDate()).isEqualTo(startDate.plusWeeks(1));
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_onlyStartDateProvided_endDateWouldExceedToday_cappedToToday()
+    {
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .startDate(startDate)
+                .build();
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        assertThat(request.getStartDate()).isEqualTo(startDate);
+        assertThat(request.getEndDate()).isEqualTo(today);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_onlyEndDateProvided_resolvesStartDateOneWeekEarlier()
+    {
+        LocalDate endDate = LocalDate.of(2026, 7, 15);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .endDate(endDate)
+                .build();
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        assertThat(request.getStartDate()).isEqualTo(endDate.minusWeeks(1));
+        assertThat(request.getEndDate()).isEqualTo(endDate);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_onlyEndDateProvided_resolvedStartDateBeforeEarliestSupportedDate_throwsInvalidAirPollutionQueryException()
+    {
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("Ankara")
+                .endDate(LocalDate.of(2020, 11, 30))
+                .build();
+
+        assertThatThrownBy(() -> airPollutionService.handleGetAirPollutionHistoryRequest(request))
+                .isInstanceOf(InvalidAirPollutionQueryException.class)
+                .hasMessageContaining("2020-11-23")
+                .hasMessageContaining("2020-11-27");
+
+        verifyNoInteractions(crawlerClient);
+    }
+
+    @Test
+    void handleGetAirPollutionHistoryRequest_lowerCaseCity_isNormalizedBeforeSupportedCityCheck()
+    {
+        LocalDate date = LocalDate.of(2026, 7, 1);
+        AirPollutionHistoryRequest request = AirPollutionHistoryRequest.builder()
+                .city("ankara")
+                .startDate(date)
+                .endDate(date)
+                .build();
+
+        airPollutionService.handleGetAirPollutionHistoryRequest(request);
+
+        assertThat(request.getCity()).isEqualTo("ANKARA");
+    }
+
+    @Test
     void handleGetAirPollutionHistoryRequest_freshEntry_createsAirPollutionAndReturnsUpdatedList()
     {
         LocalDate date = LocalDate.of(2026, 7, 1);

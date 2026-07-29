@@ -195,39 +195,33 @@ public class AirPollutionService implements IAirPollutionService
         log.info(LogMessages.AIR_POLLUTION_HISTORY_REQUEST_RECEIVED,
                 request.getCity(), request.getStartDate(), request.getEndDate());
 
-        resolveAirPollutionHistoryRequest(request);
         validateAirPollutionHistoryRequest(request);
+
+        resolveAirPollutionHistoryRequest(request);
+
+        validateDateRange(request);
 
         GeocodeDto geocode = geoCodeService.getCoordinatesOfGivenCity(request.getCity());
 
-        List<AirPollutionHistoryEntryDto> entries = crawlerClient.fetchAirPollutionHistory(
-                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate()).getList();
+        AirPollutionHistoryDto airPollutionHistoryDto = fetchAirPollutionHistory(geocode, request);
 
-        AirPollutionHistoryDto historyDto = extractExistsRecords(request, entries);
+        extractExistsRecordsFromAirPollutionHistoryDto(request, airPollutionHistoryDto);
 
-        List<AirPollution> airPollutions = historyDto.getList().stream().map(entry -> {
-                    AirPollutionCreateRequest airPollutionCreateRequest = AirPollutionHistoryMapper.toCreateRequest(request.getCity(), entry);
-                    log.info(LogMessages.AIR_POLLUTION_WITH_CITY_AND_DATE_FETCHED_FROM_API,
-                            airPollutionCreateRequest.getCity(),
-                            airPollutionCreateRequest.getDate());
-                    return toAirPollutionFromAirPollutionCreateRequest(airPollutionCreateRequest);
-                }
-        ).toList();
+        List<AirPollution> airPollutions = getAirPollutionListFromAirPollutionHistoryDto(request.getCity(), airPollutionHistoryDto);
 
         createAllAirPollutions(airPollutions);
 
         return airPollutionRepository.findByCityAndDateBetweenOrderByDateAsc(request.getCity(), request.getStartDate(), request.getEndDate());
     }
 
-    private AirPollutionHistoryDto extractExistsRecords(AirPollutionHistoryRequest request, List<AirPollutionHistoryEntryDto> entries)
+    private void extractExistsRecordsFromAirPollutionHistoryDto(AirPollutionHistoryRequest request, AirPollutionHistoryDto airPollutionHistory)
     {
-        AirPollutionHistoryDto airPollutionHistoryDto = new AirPollutionHistoryDto();
-        airPollutionHistoryDto.setList(new ArrayList<>());
+        List<AirPollutionHistoryEntryDto> airPollutionHistoryEntryDtoList = new ArrayList<>();
         String city = request.getCity();
         LocalDate currentDate;
         Set<LocalDate> existsDates = findDatesByCityAndDateBetween(city, request.getStartDate(), request.getEndDate());
         Set<LocalDate> coveredDates = new HashSet<>();
-        for (AirPollutionHistoryEntryDto entryDto : entries)
+        for (AirPollutionHistoryEntryDto entryDto : airPollutionHistory.getList())
         {
             currentDate = toLocalDate(entryDto.getDt());
 
@@ -243,11 +237,11 @@ public class AirPollutionService implements IAirPollutionService
                 continue;
             }
 
-            airPollutionHistoryDto.getList().add(entryDto);
+            airPollutionHistoryEntryDtoList.add(entryDto);
             coveredDates.add(currentDate);
         }
 
-        return airPollutionHistoryDto;
+        airPollutionHistory.setList(airPollutionHistoryEntryDtoList);
     }
 
     private static LocalDate toLocalDate(long epochSecond)
@@ -258,7 +252,7 @@ public class AirPollutionService implements IAirPollutionService
     private void validateAirPollutionHistoryRequest(AirPollutionHistoryRequest request)
     {
         validateCity(request.getCity());
-        validateSupportedCity(request.getCity());
+        validateSupportedCity(request.getCity().toUpperCase(Locale.ROOT));
         validateDateRange(request);
     }
 
@@ -335,20 +329,29 @@ public class AirPollutionService implements IAirPollutionService
     {
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
-        if (startDate.isAfter(endDate))
+        if (startDate == null)
         {
-            throw new InvalidAirPollutionQueryException(String.format(
-                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
-                    startDate,
-                    endDate));
+            return;
         }
-
         if (startDate.isBefore(EARLIEST_SUPPORTED_DATE))
         {
             throw new InvalidAirPollutionQueryException(String.format(
                     ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_TOO_EARLY,
                     startDate,
                     EARLIEST_SUPPORTED_DATE));
+        }
+
+        if (endDate == null)
+        {
+            return;
+        }
+
+        if (startDate.isAfter(endDate))
+        {
+            throw new InvalidAirPollutionQueryException(String.format(
+                    ErrorMessages.AIR_POLLUTION_QUERY_START_DATE_AFTER_END_DATE,
+                    startDate,
+                    endDate));
         }
     }
 
@@ -378,5 +381,23 @@ public class AirPollutionService implements IAirPollutionService
                             .build();
                 })
                 .toList();
+    }
+
+    private List<AirPollution> getAirPollutionListFromAirPollutionHistoryDto(String city, AirPollutionHistoryDto historyDto)
+    {
+        return historyDto.getList().stream().map(entry -> {
+                    AirPollutionCreateRequest airPollutionCreateRequest = AirPollutionHistoryMapper.toCreateRequest(city, entry);
+                    log.info(LogMessages.AIR_POLLUTION_WITH_CITY_AND_DATE_FETCHED_FROM_API,
+                            airPollutionCreateRequest.getCity(),
+                            airPollutionCreateRequest.getDate());
+                    return toAirPollutionFromAirPollutionCreateRequest(airPollutionCreateRequest);
+                }
+        ).toList();
+    }
+
+    private AirPollutionHistoryDto fetchAirPollutionHistory(GeocodeDto geocode, AirPollutionHistoryRequest request)
+    {
+        return crawlerClient.fetchAirPollutionHistory(
+                geocode.getLat(), geocode.getLon(), request.getStartDate(), request.getEndDate());
     }
 }
