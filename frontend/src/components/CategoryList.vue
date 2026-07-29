@@ -10,39 +10,15 @@ defineProps({
 </script>
 
 <template>
-  <ul class="category-list">
-    <li v-for="category in categories" :key="category.id ?? category.contaminent" class="category-list__item">
-      <span class="category-list__name">{{ category.contaminent }}</span>
-      <span class="category-list__value">{{ category.contaminentValue }}</span>
+  <ul class="flex flex-col gap-1.5">
+    <li
+      v-for="category in categories"
+      :key="category.id ?? category.contaminent"
+      class="flex items-center gap-2.5 text-sm"
+    >
+      <span class="w-12 font-semibold text-slate-900 dark:text-slate-100">{{ category.contaminent }}</span>
+      <span class="w-16 text-slate-500 dark:text-slate-400">{{ category.contaminentValue }}</span>
       <AqiBadge :category="category.aqiCategory" />
     </li>
   </ul>
 </template>
-
-<style scoped>
-.category-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.category-list__item {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.9rem;
-}
-
-.category-list__name {
-  font-weight: 600;
-  width: 3rem;
-}
-
-.category-list__value {
-  color: var(--text);
-  width: 4rem;
-}
-</style>

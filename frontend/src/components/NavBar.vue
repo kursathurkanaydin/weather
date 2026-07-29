@@ -3,61 +3,31 @@ import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <header class="navbar">
-    <div class="navbar__inner">
-      <RouterLink to="/" class="navbar__brand">Weather · Air Pollution Tracker</RouterLink>
-      <nav class="navbar__links">
-        <RouterLink to="/" class="navbar__link">Records</RouterLink>
-        <RouterLink to="/history" class="navbar__link">Fetch History</RouterLink>
-        <RouterLink to="/geocode" class="navbar__link">Geocode</RouterLink>
+  <header class="border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+    <div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+      <RouterLink to="/" class="text-base font-semibold text-slate-900 dark:text-slate-100">
+        Weather <span class="text-slate-400 dark:text-slate-600">·</span> Air Pollution Tracker
+      </RouterLink>
+      <nav class="flex gap-5">
+        <RouterLink
+          to="/"
+          class="border-b-2 border-transparent pb-0.5 text-sm text-slate-500 transition-colors hover:text-slate-900 [&.router-link-exact-active]:border-blue-600 [&.router-link-exact-active]:text-blue-600 dark:text-slate-400 dark:hover:text-slate-100 dark:[&.router-link-exact-active]:border-blue-400 dark:[&.router-link-exact-active]:text-blue-400"
+        >
+          Records
+        </RouterLink>
+        <RouterLink
+          to="/history"
+          class="border-b-2 border-transparent pb-0.5 text-sm text-slate-500 transition-colors hover:text-slate-900 [&.router-link-exact-active]:border-blue-600 [&.router-link-exact-active]:text-blue-600 dark:text-slate-400 dark:hover:text-slate-100 dark:[&.router-link-exact-active]:border-blue-400 dark:[&.router-link-exact-active]:text-blue-400"
+        >
+          Fetch History
+        </RouterLink>
+        <RouterLink
+          to="/geocode"
+          class="border-b-2 border-transparent pb-0.5 text-sm text-slate-500 transition-colors hover:text-slate-900 [&.router-link-exact-active]:border-blue-600 [&.router-link-exact-active]:text-blue-600 dark:text-slate-400 dark:hover:text-slate-100 dark:[&.router-link-exact-active]:border-blue-400 dark:[&.router-link-exact-active]:text-blue-400"
+        >
+          Geocode
+        </RouterLink>
       </nav>
     </div>
   </header>
 </template>
-
-<style scoped>
-.navbar {
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.navbar__inner {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.navbar__brand {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--text-h);
-  text-decoration: none;
-}
-
-.navbar__links {
-  display: flex;
-  gap: 1.25rem;
-}
-
-.navbar__link {
-  color: var(--text);
-  text-decoration: none;
-  font-size: 0.95rem;
-  padding-bottom: 2px;
-  border-bottom: 2px solid transparent;
-}
-
-.navbar__link:hover {
-  color: var(--text-h);
-}
-
-.navbar__link.router-link-exact-active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-</style>

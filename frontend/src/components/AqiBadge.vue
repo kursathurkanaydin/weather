@@ -1,63 +1,33 @@
 <script setup>
+import { computed } from 'vue'
 import { AQI_CATEGORY_LABELS } from '../constants/aqi'
 
-defineProps({
+const props = defineProps({
   category: {
     type: String,
     default: null,
   },
 })
+
+const styles = {
+  good: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  satisfactory: 'bg-lime-100 text-lime-700 dark:bg-lime-900/40 dark:text-lime-300',
+  moderate: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  poor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  severe: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  hazardous: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+}
+
+const badgeClass = computed(
+  () => styles[props.category?.toLowerCase()] ?? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+)
 </script>
 
 <template>
-  <span v-if="category" class="aqi-badge" :class="`aqi-badge--${category.toLowerCase()}`">
-    {{ AQI_CATEGORY_LABELS[category] || category }}
+  <span
+    class="inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold"
+    :class="badgeClass"
+  >
+    {{ category ? AQI_CATEGORY_LABELS[category] || category : 'Unknown' }}
   </span>
-  <span v-else class="aqi-badge aqi-badge--unknown">Unknown</span>
 </template>
-
-<style scoped>
-.aqi-badge {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.aqi-badge--good {
-  background: #d9f2df;
-  color: #1c7a3d;
-}
-
-.aqi-badge--satisfactory {
-  background: #e2f2d9;
-  color: #4d7a1c;
-}
-
-.aqi-badge--moderate {
-  background: #fdf1c8;
-  color: #8a6a00;
-}
-
-.aqi-badge--poor {
-  background: #fde1c8;
-  color: #9a4d00;
-}
-
-.aqi-badge--severe {
-  background: #fbd4d4;
-  color: #a11c1c;
-}
-
-.aqi-badge--hazardous {
-  background: #e6c8d8;
-  color: #6b1240;
-}
-
-.aqi-badge--unknown {
-  background: var(--border);
-  color: var(--text);
-}
-</style>
