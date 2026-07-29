@@ -1,8 +1,11 @@
 # Weather - Air Pollution Tracker
 
-A Spring Boot application that fetches air pollution history for a set of supported cities from the [OpenWeatherMap API](https://openweathermap.org/api), stores it in a database, and exposes it through a simple REST API.
+A full-stack application that fetches air pollution history for a set of supported cities from the [OpenWeatherMap API](https://openweathermap.org/api), stores it in a database, and exposes/visualizes it.
 
-For each requested city and date range, the app:
+- **`backend/`** - Spring Boot REST API (Java 17)
+- **`frontend/`** - Vue 3 web client
+
+For each requested city and date range, the backend:
 1. Resolves the city's coordinates (geocoding).
 2. Fetches hourly air pollution data from OpenWeatherMap for that date range.
 3. Reduces it to one record per day, and computes an AQI (Air Quality Index) category for CO, O3 and SO2 based on India's CPCB thresholds.
@@ -12,25 +15,44 @@ For each requested city and date range, the app:
 
 `LONDON`, `BARCELONA`, `ANKARA`, `TOKYO`, `MUMBAI`
 
+## Project structure
+
+```
+weather/
+├── backend/           # Spring Boot API
+│   ├── build.gradle
+│   ├── src/
+│   └── Dockerfile
+├── frontend/           # Vue 3 (Vite) web client
+│   ├── package.json
+│   ├── src/
+│   └── Dockerfile
+├── docker-compose.yaml # runs postgres + backend + frontend together
+├── .env.example
+└── README.md
+```
+
 ## Tech stack
 
-- **Java 17**
-- **Spring Boot 4.1** (Web MVC, REST Client, Validation, Data JPA)
-- **Hibernate / JPA** - ORM
-- **Flyway** - database migrations
-- **PostgreSQL** - production database
-- **H2** (in-memory) - local development database
-- **Gradle** - build tool
-- **Lombok** - reduces boilerplate code
-- **Logback** - logging
-- **springdoc-openapi** - Swagger UI / API docs
-- **JUnit 5, Mockito, AssertJ** - testing
-- **Docker / Docker Compose** - containerized setup
+**Backend**
+- Java 17, Spring Boot 4.1 (Web MVC, REST Client, Validation, Data JPA)
+- Hibernate / JPA, Flyway migrations
+- PostgreSQL (prod) / H2 in-memory (dev)
+- Gradle, Lombok, Logback, springdoc-openapi (Swagger)
+- JUnit 5, Mockito, AssertJ
+
+**Frontend**
+- Vue 3 + Vite
+- pnpm
+
+**Infra**
+- Docker / Docker Compose
 
 ## Prerequisites
 
-- Java 17+ (only needed if you want to run it without Docker)
-- Docker and Docker Compose (recommended way to run the project)
+- Docker and Docker Compose (recommended way to run the whole stack)
+- Java 17+ (only needed to run the backend without Docker)
+- Node.js 22+ and [pnpm](https://pnpm.io/) (only needed to run the frontend without Docker)
 - An OpenWeatherMap API key - get a free one at https://openweathermap.org/api
 
 ## Getting started
@@ -38,7 +60,7 @@ For each requested city and date range, the app:
 ### 1. Clone the project
 
 ```bash
-git clone https://github.com/kursathurkanaydin/weather.git
+git clone <repository-url>
 cd weather
 ```
 
@@ -66,14 +88,15 @@ Open `.env` and edit it:
 
 ### Option A: Docker (recommended)
 
-This starts both the application and a PostgreSQL database, and runs the Flyway migrations automatically.
+This starts Postgres, the backend, and the frontend together, and runs the Flyway migrations automatically.
 
 ```bash
 docker compose up --build
 ```
 
-The app will be available at `http://localhost:8080`.
-Postgres is exposed on `localhost:5433` (mapped from the container's `5432`) if you want to inspect it with a DB client.
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8080`
+- Postgres: exposed on `localhost:5433` (mapped from the container's `5432`) if you want to inspect it with a DB client
 
 To stop everything:
 
@@ -81,27 +104,36 @@ To stop everything:
 docker compose down
 ```
 
-### Option B: Run locally with Gradle
+### Option B: Run each part locally
 
-This uses the `dev` profile with an in-memory H2 database, so no Postgres setup is required.
+**Backend** (uses the `dev` profile with an in-memory H2 database, no Postgres setup required):
 
 ```bash
+cd backend
 ./gradlew bootRun
 ```
 
 Make sure `OPENWEATHER_API_KEY` is set in your `.env` file (or as an environment variable) before starting.
-
 The H2 console is available at `http://localhost:8080/h2-console` while running with the `dev` profile.
 
-### Running tests
+**Frontend**:
 
 ```bash
+cd frontend
+pnpm install
+pnpm run dev
+```
+
+### Running backend tests
+
+```bash
+cd backend
 ./gradlew test
 ```
 
 ## API Documentation (Swagger)
 
-Once the app is running, interactive API docs are available at:
+Once the backend is running, interactive API docs are available at:
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
@@ -127,10 +159,10 @@ Once the app is running, interactive API docs are available at:
 
 Dates are in `yyyy-MM-dd` format.
 
-## Project structure
+## Backend project structure
 
 ```
-src/main/java/com/mobileaction/weather
+backend/src/main/java/com/mobileaction/weather
 ├── client        # OpenWeatherMap HTTP client
 ├── constant      # Error/log message constants
 ├── controller    # REST controllers
